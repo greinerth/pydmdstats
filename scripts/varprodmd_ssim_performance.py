@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # pylint: skip-file
 """
-OptDMD vs BOPDMD on SSIM
+VarProDMD vs BOPDMD on SSIM
 """
 import argparse
 import inspect
@@ -16,7 +16,7 @@ import numpy as np
 import wget
 from colorama import Fore
 
-from util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
+from scripts.util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
                                     exec_times_varpro_dmd, signal2d, ssim_multi_images,
                                     std_checker)
 from pydmd.bopdmd import BOPDMD

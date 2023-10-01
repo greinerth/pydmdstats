@@ -10,6 +10,7 @@ import numpy as np
 from pydmd import BOPDMD
 from pydmd import VarProDMD
 from util.experiment_utils import OPT_ARGS
+from varprodmd_ssim_performance import download
 
 
 def generate_global_temp(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
@@ -27,6 +28,12 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
     FILE = os.path.join(currentdir, "data")
+
+    if not os.path.exists(FILE):
+        os.makedirs(FILE)
+        download("https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
+                FILE)
+
     FILE = os.path.join(FILE, DATASET)
     dataset = nc.Dataset(FILE)
     sst = dataset["sst"][:]

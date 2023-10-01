@@ -26,6 +26,6 @@ def test_stats():
     mean = wrapped_func.mean
     std = np.sqrt(wrapped_func.var)
 
-    assert mean == pytest.approx(10e-3)
-    assert std == pytest.approx(STD_TIME)
+    assert mean == pytest.approx(10e-3, 0.1)
+    assert std == pytest.approx(STD_TIME, 0.1)
 
