@@ -9,7 +9,7 @@ from skimage.metrics import structural_similarity as ssim
 
 import varprodmdstatspy.util.stats as stats
 
-OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac'}
+OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac', "max_nfev": 30}
 # OPT_ARGS = {"method": 'lm'}
 
 
