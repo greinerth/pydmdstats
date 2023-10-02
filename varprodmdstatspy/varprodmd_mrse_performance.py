@@ -12,7 +12,7 @@ from typing import Any, Dict
 
 import numpy as np
 from colorama import Fore
-from scripts.util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
+from varprodmdstatspy.util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
                                    exec_times_varpro_dmd, signal, std_checker)
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD

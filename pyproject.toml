@@ -37,6 +37,11 @@ dependencies = [
     "wget"
 ]
 
+[tool.hatch.build]
+include = [
+  "varprodmdstatspy"
+]
+
 [project.optional-dependencies]
 dev = ["anybadge",
        "pylint",
@@ -49,5 +54,5 @@ dev = ["anybadge",
        "hatchling"]
 
 [project.scripts]
-run_ssim = "scripts.varprodmd_ssim_performance:run_ssim"
-run_mrse = "scripts.varprodmd_mrse_performance:run_mrse"
+run_ssim = "varprodmdstatspy.varprodmd_ssim_performance:run_ssim"
+run_mrse = "varprodmdstatspy.varprodmd_mrse_performance:run_mrse"

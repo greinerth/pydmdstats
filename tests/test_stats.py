@@ -1,15 +1,9 @@
 import pytest
-import inspect
-import os
-import sys
 import time
 import numpy as np
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
 
-from scripts.util.stats import runtime_stats
+from varprodmdstatspy.util.stats import runtime_stats
 
 def test_stats():
     STD_TIME = 1e-3

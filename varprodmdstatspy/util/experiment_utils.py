@@ -7,7 +7,7 @@ from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 from skimage.metrics import structural_similarity as ssim
 
-import scripts.util.stats as stats
+import varprodmdstatspy.util.stats as stats
 
 OPT_ARGS = {"method": 'trf', "tr_solver": 'exact'}
 # OPT_ARGS = {"method": 'lm', 'x_scale': 'jac', "max_nfev": 10}
