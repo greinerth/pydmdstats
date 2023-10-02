@@ -17,8 +17,9 @@ if __name__ == "__main__":
     z_signal = signal(__x, __time).T
     __x = __x.T
     __time = __time.T
-    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS)
+    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, sorted_eigs='imag', exact=True)
     __dmd.fit(z_signal, time)
+    print(__dmd.eigs.imag)
     __indices = __dmd.selected_samples
     __pred = __dmd.forecast(time)
 
@@ -28,18 +29,20 @@ if __name__ == "__main__":
     # ax0.contour(__time, __x, z_signal.real, zdir='z', offset=z_signal.real.min(), cmap="plasma")
     # ax0.contour(__time, __x, z_signal.real, zdir='x', offset=0, cmap="plasma")
     # ax0.contour(__time, __x, z_signal.real, zdir='y', offset=x_loc.max(), cmap="plasma")
-    for i in range(__indices.size):
-        ax.plot(__time[:, __indices[i]], __x[:, __indices[i]],
-                z_signal[:, __indices[i]].real, "--", color="r", linewidth=1)
+    if __indices is not None:
+        for i in range(__indices.size):
+            ax.plot(__time[:, __indices[i]], __x[:, __indices[i]],
+                    z_signal[:, __indices[i]].real, "--", color="r", linewidth=1)
     ax.set_xlabel(r"$s$")
     ax.set_ylabel(r"$m$")
     ax.set_title(r"Original - $\Re\{\mathbf{X}\}$")
 
     ax = fig.add_subplot(2, 1, 2, projection='3d')
     ax.plot_surface(__time, __x, z_signal.imag, cmap="plasma", alpha=0.5)
-    for i in range(__indices.size):
-        ax.plot(__time[:, __indices[i]], __x[:, __indices[i]],
-                z_signal[:, __indices[i]].imag, "--", color="r", linewidth=1)
+    if __indices is not None:
+        for i in range(__indices.size):
+            ax.plot(__time[:, __indices[i]], __x[:, __indices[i]],
+                    z_signal[:, __indices[i]].imag, "--", color="r", linewidth=1)
     ax.set_xlabel(r"$s$")
     ax.set_ylabel(r"$m$")
     ax.set_title(r"Original - $\Im\{\mathbf{X}\}$")

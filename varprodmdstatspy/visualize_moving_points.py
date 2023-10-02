@@ -46,7 +46,7 @@ if __name__ == "__main__":
     varprodmd.fit(snapshots, time)
     bopdmd = BOPDMD()
     bopdmd.fit(snapshots, time)
-    varprodmd_pred = varprodmd.predict(time[::sample_dist])
+    varprodmd_pred = varprodmd.forecast(time[::sample_dist])
     bopdmd_pred = bopdmd.forecast(time[::sample_dist])
     datasub = data_in[::sample_dist]
 

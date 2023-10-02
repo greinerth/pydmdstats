@@ -9,8 +9,8 @@ from skimage.metrics import structural_similarity as ssim
 
 import varprodmdstatspy.util.stats as stats
 
-OPT_ARGS = {"method": 'trf', "tr_solver": 'exact'}
-# OPT_ARGS = {"method": 'lm', 'x_scale': 'jac', "max_nfev": 10}
+OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac', "max_nfev": 10}
+# OPT_ARGS = {"method": 'lm'}
 
 
 def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
@@ -31,7 +31,7 @@ def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
         sigma (float, optional): Size of dots. Defaults to 0.1.
 
     Returns:
-        np.ndarray: _description_
+        np.ndarray: 2D signal
     """
     x_diff_square_fast = np.square(x_in - 10 * velocity * time - x_0[0])
     y_diff_square_fast = np.square(y_in - y_0[0])

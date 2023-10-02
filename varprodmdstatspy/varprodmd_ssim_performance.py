@@ -168,7 +168,7 @@ def test_global_temp(method: str,
     low, high = ds["sst"].valid_range
     n_samples = float(sst.shape[0])
     dt = YEARS / float(n_samples)
-    sst = sst[-64:]
+    sst = sst[-128:]
     mean = 0
     var = 0
     time = np.arange(sst.shape[0]) * dt
@@ -285,7 +285,7 @@ def run_ssim():
         print("Downloading dataset...")
         os.makedirs(PATH2DATASET)
         download("https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-                 PATH2DATASET)
+                 os.path.join(PATH2DATASET, "sst.day.mean.ltm.1982-2010.nc"))
 
     if not os.path.exists(__args.out):
         os.makedirs(__args.out)

@@ -32,17 +32,17 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[
     if not os.path.exists(FILE):
         os.makedirs(FILE)
         download("https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-                FILE)
+                os.path.join(FILE, DATASET))
 
     FILE = os.path.join(FILE, DATASET)
     dataset = nc.Dataset(FILE)
     sst = dataset["sst"][:]
-    print(dataset["sst"])
+
     low, high = dataset["sst"].valid_range
     n_samples = float(sst.shape[0])
     delta_t = YEARS / float(n_samples)
     sst = sst[-128:]
-
+    print(sst.shape)
     timestamps = np.arange(sst.shape[0]) * delta_t
     img0 = sst[0]
     # img0 = img0[::-1, ::]
@@ -72,12 +72,12 @@ if __name__ == "__main__":
     STD = 4e-2
     snapshots, time,  data_in, msk_flat = generate_global_temp(STD)
     sample_dist = data_in.shape[0] // N_SAMPLES
-    varprodmd = VarProDMD(optargs=OPT_ARGS)
+    varprodmd = VarProDMD(optargs=OPT_ARGS, exact=False)
     varprodmd.fit(snapshots, time)
 
     bopdmd = BOPDMD()
     bopdmd.fit(snapshots, time)
-    varprodmd_pred = varprodmd.predict(time[::sample_dist])
+    varprodmd_pred = varprodmd.forecast(time[::sample_dist])
     bopdmd_pred = bopdmd.forecast(time[::sample_dist])
     datasub = data_in[::sample_dist]
 
