@@ -61,7 +61,7 @@ def run_mrse():
 
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
-    COMPS = [0, 0.2, 0.4, 0.6, 0.8]
+    COMPS = [0, 0.2, 0.4, 0.6]
 
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
