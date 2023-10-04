@@ -247,7 +247,7 @@ def run_ssim():
     # FILE = os.path.join(PATH, DATASET)
     OUTDIR = os.path.join(currentdir, "output")
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
-
+    print(OPT_ARGS)
     parser.add_argument("--compression",
                         metavar='N',
                         nargs="+",

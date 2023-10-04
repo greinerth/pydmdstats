@@ -4,14 +4,24 @@ from typing import Tuple, Dict, Any
 
 import numpy as np
 from pydmd.bopdmd import BOPDMD
-from pydmd.varprodmd import VarProDMD
+from pydmd.varprodmd import VarProDMD, OPT_DEF_ARGS
 from skimage.metrics import structural_similarity as ssim
-
+from scipy.optimize import Bounds
 import varprodmdstatspy.util.stats as stats
 
-OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac', "max_nfev": 30}
-# OPT_ARGS = {"method": 'lm'}
-
+# OPT_ARGS: Dict[str, Any] = {"method": 'lm', "max_nfev": 10}
+# OPT_ARGS = {"method": 'lm', "x_scale": 'jac'}
+# OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac'}
+OPT_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
+    "method": 'trf',
+    "tr_solver": 'exact',
+    'loss': 'linear',
+    # "x_scale": 'jac',
+    # "max_nfev": 5,
+    "gtol": 1e-8,
+    "xtol": 1e-8,
+    "ftol": 1e-8
+}
 
 def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
              y_in: np.ndarray,
@@ -151,6 +161,7 @@ def bopdmd_wrapper(data, time):  # pylint: disable=unused-variable
 
 def varprodmd_wrapper(data: np.ndarray,
                    time: np.ndarray,
+                   optargs: Dict[str, Any],
                    eps: float = 1e-2):  # pylint: disable=unused-variable
     """ Dummy function to force optimization execution of VarProDMD class
 
@@ -160,30 +171,30 @@ def varprodmd_wrapper(data: np.ndarray,
         eps (float, optional): Compression. Defaults to 1e-2.
 
     """
-    __varpro_dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+    __varpro_dmd = VarProDMD(compression=eps, optargs=optargs)
     __varpro_dmd.fit(data, time)
 
 
 def exec_times_varpro_dmd(data: np.ndarray,  # pylint: disable=unused-variable
-                       time: np.ndarray,
-                       comp: float = 0.1,
-                       optargs: Dict[str, Any] = OPT_ARGS,
-                       n_iter: int = 100) -> stats.ExecutionStats:
+                         time: np.ndarray,
+                         comp: float,
+                         optargs: Dict[str, Any] = OPT_ARGS,
+                         n_iter: int = 100) -> stats.ExecutionStats:
     """Wrapper functions for timing purposes
 
     Args:
         data (np.ndarray): Input for OptDMD
         time (np.ndarray): time stamps, where mesaurements where taken
-        comp (float, optional): Compression. Defaults to 0.1.
+        comp (float): Compression for library selection.
         n_iter (int, optional): Number of iterations to execute. Defaults to 100.
 
     Returns:
-        stats.ExecutionStats: _description_
+        stats.ExecutionStats: Runtime statistics (Mean and variance)
     """
 
     wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
     for __ in range(n_iter):
-        wrapper(data, time, comp)
+        wrapper(data, time, optargs, comp)
     return wrapper
 
 

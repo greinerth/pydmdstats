@@ -17,7 +17,6 @@ from varprodmdstatspy.util.experiment_utils import (OPT_ARGS, comp_checker, exec
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 
-
 def test_high_dim_signal(method: str,
                          n_runs: int,
                          std: float,
@@ -106,7 +105,7 @@ def run_mrse():
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
-
+    print(OPT_ARGS)
     print("Starting simulation...")
     __args_in = []
     for comp, std in product(COMPS, STD):
