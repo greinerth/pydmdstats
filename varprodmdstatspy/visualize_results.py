@@ -35,14 +35,14 @@ def visualize_stats():
                       "STD_NOISE": r"$\sigma_{std}$", "c": r"$c_{comp}$"}, axis="columns", inplace=True)
             g0 = sns.FacetGrid(df, col=r"$\sigma_{std}$")
             g0.map_dataframe(sns.scatterplot, r"$E\left[\overline{SSIM}\right]$", r"$E\left[t\right]$ in $s$",
-                             size="$c_{comp}$", legend="full", hue="Method", alpha=0.7)
+                             size="$c_{comp}$", legend="full", hue="Method", alpha=0.5)
 
         elif "E[RSE]" in df.columns:
             df.rename({"E[RSE]": r"$E\left[d\right]$ in $m$", "E[t]": r"$E\left[t\right]$ in $s$",
                       "STD_NOISE": r"$\sigma_{std}$", "c": r"$c_{comp}$"}, axis="columns", inplace=True)
             g0 = sns.FacetGrid(df, col="$\\sigma_{std}$")
             g0.map_dataframe(sns.scatterplot, r"$E\left[d\right]$ in $m$", r"$E\left[t\right]$ in $s$",
-                             size="$c_{comp}$", legend="full", hue="Method", alpha=0.7)
+                             size="$c_{comp}$", legend="full", hue="Method", alpha=0.5)
             
         else:
             raise ValueError("Unsupported Experiment!")

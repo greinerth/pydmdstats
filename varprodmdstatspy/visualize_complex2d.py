@@ -99,7 +99,7 @@ if __name__ == "__main__":
         ax2[1][i].set_yticks([])
         ax2[2][i].set_yticks([])
 
-    __optdmd_img = varprodmd_pred[:, 0].reshape(data_in[0].shape)
+    __varprodmd_img = varprodmd_pred[:, 0].reshape(data_in[0].shape)
     __bopdmd_img = bopdmd_pred[:, 0].reshape(data_in[0].shape)
 
     ax1[0][0].imshow(datasub[0].real, cmap=CMAP, vmin=-1, vmax=1)

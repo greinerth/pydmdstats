@@ -11,7 +11,7 @@ import varprodmdstatspy.util.stats as stats
 OPT_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
     "method": 'trf',
     "tr_solver": 'exact',
-    "x_scale": 'jac',
+    "x_scale": 'jac'
 }
 
 def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
