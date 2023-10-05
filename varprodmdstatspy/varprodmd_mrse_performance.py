@@ -105,8 +105,14 @@ def run_mrse():
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
-    print(OPT_ARGS)
-    print("Starting simulation...")
+
+    print("Solver parameters")
+    print("=================")
+
+    for key in OPT_ARGS:
+        print(f"{key}: {OPT_ARGS[key]}")
+
+    print("\nStarting simulation...")
     __args_in = []
     for comp, std in product(COMPS, STD):
         __args_in.append(("VarProDMD", N_RUNS, std, comp))

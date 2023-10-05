@@ -42,7 +42,7 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[
     n_samples = float(sst.shape[0])
     delta_t = YEARS / float(n_samples)
     sst = sst[-128:]
-    print(sst.shape)
+
     timestamps = np.arange(sst.shape[0]) * delta_t
     img0 = sst[0]
     # img0 = img0[::-1, ::]

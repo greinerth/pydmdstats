@@ -17,7 +17,7 @@ if __name__ == "__main__":
     z_signal = signal(__x, __time).T
     __x = __x.T
     __time = __time.T
-    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, sorted_eigs='imag', exact=True)
+    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, sorted_eigs=False, exact=False)
     __dmd.fit(z_signal, time)
     print(__dmd.eigs.imag)
     __indices = __dmd.selected_samples
@@ -26,9 +26,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(2, 1, 1, projection='3d')
     ax.plot_surface(__time, __x, z_signal.real, cmap="plasma", alpha=0.5)
-    # ax0.contour(__time, __x, z_signal.real, zdir='z', offset=z_signal.real.min(), cmap="plasma")
-    # ax0.contour(__time, __x, z_signal.real, zdir='x', offset=0, cmap="plasma")
-    # ax0.contour(__time, __x, z_signal.real, zdir='y', offset=x_loc.max(), cmap="plasma")
+
     if __indices is not None:
         for i in range(__indices.size):
             ax.plot(__time[:, __indices[i]], __x[:, __indices[i]],

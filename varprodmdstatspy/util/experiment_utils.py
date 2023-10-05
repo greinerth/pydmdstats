@@ -9,7 +9,8 @@ from skimage.metrics import structural_similarity as ssim
 import varprodmdstatspy.util.stats as stats
 
 OPT_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
-    "method": 'lm',
+    "method": 'trf',
+    "tr_solver": 'exact',
     "x_scale": 'jac',
 }
 
