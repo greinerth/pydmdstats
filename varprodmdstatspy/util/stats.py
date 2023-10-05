@@ -103,7 +103,8 @@ class ExecutionStats:
         if self.__verbose:
             __stats = f"\n{self.__func.__name__ } stats:\n"
             __stats += f"Mean execution time: {self.mean} [s]\n"
-            __stats += f"Var execution time: {self.var} [s]\n"
+            if self.__counter > 1:
+                __stats += f"Var execution time: {self.var} [s]\n"
             print(__stats)
 
 

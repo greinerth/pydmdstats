@@ -42,10 +42,10 @@ def test_high_dim_signal(method: str,
     omega_size = __dmd.eigs.size
     dmd_pred = __dmd.forecast(time)
     mrse_dmd = np.linalg.norm(z - dmd_pred) / np.sqrt(z.shape[-1])
-    del z
+    del z, dmd_pred
 
-    __stats = exec_times_bop_dmd(z_in, time, n_runs) if method == "BOPDMD" \
-        else exec_times_varpro_dmd(z_in, time, eps, OPT_ARGS, n_runs)
+    __stats = exec_times_bop_dmd(z_in, time, n_iter=n_runs) if method == "BOPDMD" \
+        else exec_times_varpro_dmd(z_in, time, eps, optargs=OPT_ARGS, n_iter=n_runs)
 
     return {"case": "High dimensional signal",
             "omega_size": omega_size,
@@ -61,7 +61,7 @@ def run_mrse():
 
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
-    COMPS = [0, 0.2, 0.4, 0.6]
+    COMPS = [0, 0.2, 0.4, 0.6, 0.8]
 
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))

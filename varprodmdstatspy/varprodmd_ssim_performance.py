@@ -73,6 +73,7 @@ def test_complex2d_signal(method: str,
     dmd_rec = np.concatenate(dmd_rec, axis=0)
     data_in = np.concatenate(data_in, axis=0)
     mean, var = ssim_multi_images(data_in, dmd_rec)
+    del data_in, data, dmd_rec
 
     __stats = exec_times_bop_dmd(snapshots_flat, time, n_runs) if method == "BOPDMD" \
         else exec_times_varpro_dmd(snapshots_flat, time, eps, OPT_ARGS, n_runs)
@@ -139,6 +140,9 @@ def test_2_moving_points(method: str,
         dmd_rec.append(__dmd_rec.real)
     dmd_rec = np.concatenate(dmd_rec, axis=0)
     mean, var = ssim_multi_images(imgs, dmd_rec)
+
+    del imgs, dmd_rec
+
     __stats = exec_times_bop_dmd(__flat, time, n_runs) if method == "BOPDMD" \
         else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
 
@@ -212,8 +216,7 @@ def test_global_temp(method: str,
     sst[:, rows, cols] = 0.
     mean, var = ssim_multi_images(np.expand_dims(sst, axis=-1), dmd_rec)
 
-    del sst
-    del ds
+    del sst, ds, dmd_rec
 
     __stats = exec_times_bop_dmd(__flat, time, n_runs) if method == "BOPDMD" \
         else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)

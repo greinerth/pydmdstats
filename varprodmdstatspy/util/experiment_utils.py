@@ -6,21 +6,11 @@ import numpy as np
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 from skimage.metrics import structural_similarity as ssim
-from scipy.optimize import Bounds
 import varprodmdstatspy.util.stats as stats
 
-# OPT_ARGS: Dict[str, Any] = {"method": 'lm', "max_nfev": 10}
-# OPT_ARGS = {"method": 'lm', "x_scale": 'jac'}
-# OPT_ARGS: Dict[str, Any] = {"method": 'trf', "tr_solver": 'exact', "x_scale": 'jac'}
 OPT_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
     "method": 'lm',
-    # "tr_solver": 'exact',
-    "loss": 'linear',
     "x_scale": 'jac',
-    # "max_nfev": 1,
-    # "gtol": 1e-8,
-    # "xtol": 1e-8,
-    # "ftol": 1e-8
 }
 
 def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
