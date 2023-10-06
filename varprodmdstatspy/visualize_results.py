@@ -16,8 +16,10 @@ def visualize_stats():
         FileExistsError: When file does not exist
         ValueError: When experiment is not supported.
     """
-    plt.rc('text', usetex=True)
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['text.latex.preamble'] = r'\newcommand{\mathdefault}[1][]{}'
     sns.set_style("whitegrid")
+
     parser = argparse.ArgumentParser("Visualize Statistics")
     parser.add_argument("-p", "--path", dest="path", type=str,
                         required=True, help="Path to .feather file")
