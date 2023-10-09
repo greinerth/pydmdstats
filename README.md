@@ -69,7 +69,9 @@ The selection is performed on a *complex* spatiotemporal signal, which is also u
 
 ## Results
 All experiments consider different compressions and varying noise corruption.\
-The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).
+The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).\
+Depending on the experiment either the mean/expected mean root squared error ($E\left[d\right]$) or the mean/expected Structural Similarity Index ($E\left[SSIM\right]$) is computed.\
+For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[SSIM\right]$ a value close to 1 is desired, while also having a low expected runtime.
 
 ### Spatiotemporal Dynamics
 Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
