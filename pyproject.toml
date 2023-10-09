@@ -48,7 +48,8 @@ dev = ["anybadge",
        "pytest",
        "pytest-coverage",
        "pytest-mypy",
-       "hatchling"]
+       "hatchling",
+       "memray"]
 
 [project.scripts]
 run_ssim = "varprodmdstatspy.varprodmd_ssim_performance:run_ssim"
