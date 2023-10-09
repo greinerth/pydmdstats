@@ -17,14 +17,14 @@ if __name__ == "__main__":
     z_signal = signal(__x, __time).T
     __x = __x.T
     __time = __time.T
-    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, sorted_eigs=False, exact=True)
+    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, exact=False)
     __dmd.fit(z_signal, time)
     print(__dmd.eigs.imag)
     __indices = __dmd.selected_samples
     __pred = __dmd.forecast(time)
 
     fig = plt.figure()
-    ax = fig.add_subplot(2, 1, 1, projection='3d')
+    ax = fig.add_subplot(1, 2, 1, projection='3d')
     ax.plot_surface(__time, __x, z_signal.real, cmap="plasma", alpha=0.5)
 
     if __indices is not None:
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     ax.set_ylabel(r"$m$")
     ax.set_title(r"Original - $\Re\{\mathbf{X}\}$")
 
-    ax = fig.add_subplot(2, 1, 2, projection='3d')
+    ax = fig.add_subplot(1, 2, 2, projection='3d')
     ax.plot_surface(__time, __x, z_signal.imag, cmap="plasma", alpha=0.5)
     if __indices is not None:
         for i in range(__indices.size):
@@ -46,13 +46,13 @@ if __name__ == "__main__":
     ax.set_title(r"Original - $\Im\{\mathbf{X}\}$")
 
     fig = plt.figure()
-    ax = fig.add_subplot(2, 1, 1, projection='3d')
+    ax = fig.add_subplot(1, 2, 1, projection='3d')
     ax.plot_surface(__time, __x, __pred.real, cmap="plasma")
     ax.set_xlabel(r"$s$")
     ax.set_ylabel(r"$m$")
     ax.set_title(r"Reconstructed - $\Re\{\hat{\mathbf{X}}\}$")
 
-    ax = fig.add_subplot(2, 1, 2, projection='3d')
+    ax = fig.add_subplot(1, 2, 2, projection='3d')
     ax.plot_surface(__time, __x, __pred.imag, cmap="plasma")
     ax.set_xlabel(r"$s$")
     ax.set_ylabel(r"$m$")

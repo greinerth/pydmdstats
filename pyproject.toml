@@ -56,3 +56,4 @@ dev = ["anybadge",
 [project.scripts]
 run_ssim = "varprodmdstatspy.varprodmd_ssim_performance:run_ssim"
 run_mrse = "varprodmdstatspy.varprodmd_mrse_performance:run_mrse"
+visualize_stats = "varprodmdstatspy.visualize_results:visualize_stats"

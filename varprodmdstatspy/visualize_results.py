@@ -17,7 +17,6 @@ def visualize_stats():
         ValueError: When experiment is not supported.
     """
     plt.rcParams['text.usetex'] = True
-    plt.rcParams['text.latex.preamble'] = r'\newcommand{\mathdefault}[1][]{}'
     sns.set_style("whitegrid")
 
     parser = argparse.ArgumentParser("Visualize Statistics")
