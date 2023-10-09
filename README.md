@@ -59,7 +59,8 @@ visualize_stats -p output/SSIM_global_temp.pkl
 ## Low dimensional library selection scheme
 Here is a visualization of how the QR decomposition with Column Pivoting (greedily) selects samples\
 in the projected space.\
-The selection is performed on a *complex* spatiotemporal signal, which is also used in the experiments.\
+The selection is performed on a *complex* spatiotemporal signal, which is also used in the experiments.
+
 |![lib_select](./figures/varprodmd_highdim_library_lowdim.png)|
 |:--:|
 |*Spatiotemporal signal: Real- and imaginary part of the signal. Dashed lines indicate library selection in low-dimensional space.*|
