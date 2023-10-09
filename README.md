@@ -74,7 +74,7 @@ The parameters used for the experiments are the default values of the different 
 ### Spatiotemporal Dynamics
 Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
 ```math
-f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + frac{2}{\cosh\left(x\right)}\left(x\right)\tanh\left(x\right)\exp\left(j2.8t\right)
+f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \frac{2}{\cosh\left(x\right)}\left(x\right)\tanh\left(x\right)\exp\left(j2.8t\right)
 ```
 |![spatiotemporal_stats](./figures/highdim_stats.png)|
 |:-:|
