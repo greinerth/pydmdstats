@@ -71,13 +71,22 @@ The selection is performed on a *complex* spatiotemporal signal, which is also u
 All experiments consider different compressions and varying noise corruption.\
 The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).
 
-### Spatiotemporal Signal
+### Spatiotemporal Dynamics
+Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
+```math
+f\left(x, t\right) = \sech\left(x + 3\right)\exp\left(j2.3t\right) + 2\sech\left(x\right)\tanh\left(x\right)\exp\left(j2.8t\right)
+```
 |![spatiotemporal_stats](./figures/highdim_stats.png)|
 |:-:|
 |*Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD.*|
 
 ### Damped Oscillations
-The damped oscillation experiment (taken from [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)) consists of $64$ *complex* $128 \times 128 px$ images.
+The damped oscillation experiment (taken from [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)) consists of $64$ *complex* $128 \times 128 px$ images.\
+Formula for generating the time dependend complex images:
+```math
+f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^{-t}
+```
+
 |![damped_oscillations_real](./figures/complex2d_real.png)|
 |:-:|
 |*Damped Oscillations: The top row denotes the original real (noisy) signal. The bottom rows are the reconstructions of the different approaches.*|
