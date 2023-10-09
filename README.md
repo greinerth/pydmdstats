@@ -106,7 +106,7 @@ The moving point experiments consider $128$ samples and consist of $128 \times 1
 The sea surface temperature experiment considers the last $128$ measurements of the [sst dataset](https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc).
 Each recording consists of $720 \times 1440\: px$.
 
-|![sst_rec](./figures/global_temp.png)\|
+|![sst_rec](./figures/global_temp.png)|
 |:--:|
 |*Global sea surface temperature: The optimization is performed on the last 128 samples of the dataset. Three preselected samples/reconstructions are shown. The top row shows the original (noisy) signal. The bottom rows are the reconstructions of the different approaches.*|
 
