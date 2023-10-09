@@ -24,21 +24,19 @@ sudo apt upgrade -y
 sudo apt install texlive-xetex cm-super dvipng -y
 ```
 ### VSCode Devcontainer (Ubuntu 22.04 as host system)
-Open the repository and press `CTRL + SHIFT + P` and type `Devcontainers: Rebuild and Reopen in Container`.\
+Open the repository, press `CTRL + SHIFT + P`, and type `Devcontainers: Rebuild and Reopen in Container`.\
 After everything is ready to run.
 
 ### Running the Experiments
-After the setup phase simply execute
+After the setup phase execute
 ```
 run_mrse -o /path/to/output/
 ```
 for running the spatiotemporal signal experiment.
-Please type
+For further information, please type
 ```
 run_mrse -h
 ```
-for further information.
-
 For the more complex experiments e.g. type
 ```
 run_ssim -f moving_points -o /path/to/output
@@ -108,7 +106,7 @@ Each recording consists of $720 \times 1440 px$.
 
 |![sst_rec](./figures/global_temp.png)|
 |:-:|
-|*Global sea surface temperature: The optimization is performed on the last 128 samples of the dataset. 3 preselected samples/reconstructions are shown. The top row shows the original (noisy) signal, the bottom rows are the reconstructions of the different approaches.*|
+|*Global sea surface temperature: The optimization is performed on the last 128 samples of the dataset. Three preselected samples/reconstructions are shown. The top row shows the original (noisy) signal, the bottom rows are the reconstructions of the different approaches.*|
 
 |![sst_stats](./figures/global_temp_stats.png)|
 |:-:|
