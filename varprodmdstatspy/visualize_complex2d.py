@@ -9,7 +9,9 @@ from pydmd import VarProDMD
 from util.experiment_utils import OPT_ARGS
 
 
-def generate_complex2d(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+def generate_complex2d(std: float = -1) -> Tuple[np.ndarray,
+                                                 np.ndarray,
+                                                 List[np.ndarray]]:
     """Generate damped oscillating signal
 
     Args:

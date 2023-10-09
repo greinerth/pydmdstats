@@ -12,8 +12,12 @@ from typing import Any, Dict
 
 import numpy as np
 from colorama import Fore
-from varprodmdstatspy.util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
-                                   exec_times_varpro_dmd, signal, std_checker)
+from varprodmdstatspy.util.experiment_utils import (OPT_ARGS,
+                                                    comp_checker,
+                                                    exec_times_bop_dmd,
+                                                    exec_times_varpro_dmd,
+                                                    signal,
+                                                    std_checker)
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 
@@ -82,7 +86,8 @@ def run_mrse():
                         metavar='N',
                         type=std_checker, nargs='+',
                         dest="std",
-                        default=STD, help=f"Standard Deviation for noise. [Defaults: {STD}]")
+                        default=STD,
+                        help=f"Standard Deviation for noise. [Defaults: {STD}]")
     parser.add_argument("-o",
                         "--out",
                         type=str,
@@ -150,18 +155,17 @@ def run_mrse():
         mrse_mean_list.append(mean)
 
         print(Fore.WHITE + f"{method} - Mean RSE: {mean}")
-        print(
-            Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
-        print(
-            Fore.WHITE + f"{method} - Mean exec time: {mean_t} [s], Std exec time: {np.sqrt(var_t)} [s]")
+        print(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
+        stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
+        print(Fore.WHITE + stats.format(method, mean_t, np.sqrt(var_t)))
+    
         if __std > 0:
-            print(
-                Fore.WHITE + f"{method} - Noise STD: {__std}")
+            print(Fore.WHITE + f"{method} - Noise STD: {__std}")
+
         if method == "VarProDMD":
             comp = res["compression"]
             if comp > 0:
-                print(
-                    Fore.WHITE + f"VarProDMD compression: {comp * 100:.2f}%")
+                print(Fore.WHITE + f"VarProDMD compression: {comp * 100:.2f}%")
         print("\n")
 
     data_dict = {"Method": method_list,

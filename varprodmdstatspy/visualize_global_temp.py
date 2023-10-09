@@ -13,7 +13,9 @@ from util.experiment_utils import OPT_ARGS
 from varprodmd_ssim_performance import download
 
 
-def generate_global_temp(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+def generate_global_temp(std: float = -1) -> Tuple[np.ndarray,
+                                                   np.ndarray,
+                                                   List[np.ndarray]]:
     """Read Sea Surface Temperature and augment with noise.
 
     Args:
@@ -87,7 +89,8 @@ if __name__ == "__main__":
     fig2.suptitle('Imaginary Part', fontsize=16)
 
     for i in range(1, N_SAMPLES):
-        __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:], )), dtype=varprodmd_pred.dtype)
+        __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:], )),
+                                         dtype=varprodmd_pred.dtype)
         __varprodmd_img_flat[msk_flat] = varprodmd_pred[:, i]
         __bopdmd_img_flat = np.zeros_like(__varprodmd_img_flat)
         __bopdmd_img_flat[msk_flat] = bopdmd_pred[:, i]
@@ -131,7 +134,8 @@ if __name__ == "__main__":
         ax2[1][i].set_yticks([])
         ax2[2][i].set_yticks([])
 
-    __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:]), ), dtype=varprodmd_pred.dtype)
+    __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:]), ),
+                                    dtype=varprodmd_pred.dtype)
     __varprodmd_img_flat[msk_flat] = varprodmd_pred[:, 0]
     __bopdmd_img_flat = np.zeros_like(__varprodmd_img_flat)
     __bopdmd_img_flat[msk_flat] = bopdmd_pred[:, 0]

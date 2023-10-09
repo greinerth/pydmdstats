@@ -16,9 +16,13 @@ import numpy as np
 import wget
 from colorama import Fore
 
-from varprodmdstatspy.util.experiment_utils import (OPT_ARGS, comp_checker, exec_times_bop_dmd,
-                                    exec_times_varpro_dmd, signal2d, ssim_multi_images,
-                                    std_checker)
+from varprodmdstatspy.util.experiment_utils import (OPT_ARGS,
+                                                    comp_checker,
+                                                    exec_times_bop_dmd,
+                                                    exec_times_varpro_dmd,
+                                                    signal2d,
+                                                    ssim_multi_images,
+                                                    std_checker)
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 
@@ -242,6 +246,7 @@ def run_ssim():
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
     COMPS = [0, 0.4, 0.6, 0.8]
+    FCTS = list(fcts.keys)
 
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
@@ -263,7 +268,8 @@ def run_ssim():
                         metavar='N',
                         type=std_checker, nargs='+',
                         dest="std",
-                        default=STD, help=f"Standard Deviation for noise. [Defaults: {STD}]")
+                        default=STD,
+                        help=f"Standard Deviation for noise. [Defaults: {STD}]")
     parser.add_argument("-o",
                         "--out",
                         type=str,
@@ -277,7 +283,7 @@ def run_ssim():
                         dest="runs",
                         help=f"Number of runs per configuration [Defaults: {N_RUNS}]")
     parser.add_argument("-f", "--function", required=True, dest="fct", type=str,
-                        help=f"Function to run: Available functions: {list(fcts.keys())}")
+                        help=f"Function to run: Available functions: {FCTS}")
     __args = parser.parse_args()
 
     if __args.fct not in fcts:
@@ -345,7 +351,8 @@ def run_ssim():
 
         print(Fore.WHITE + f"{method} - Mean SSIM: {mean}, Var SSIM: {var}")
         print(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
-        print(Fore.WHITE + f"{method} - Mean exec time: {mean_t} [s], Std exec time: {np.sqrt(var_t)} [s]")
+        stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
+        print(Fore.WHITE + stats.format(method, mean_t, np.sqrt(var_t)))
         if __std > 0:
             print(Fore.WHITE + f"{method} - Noise STD: {__std}")
         if method == "VarProDMD":

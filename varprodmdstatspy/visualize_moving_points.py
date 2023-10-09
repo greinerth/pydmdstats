@@ -9,11 +9,14 @@ from pydmd import BOPDMD
 from pydmd import VarProDMD
 from util.experiment_utils import OPT_ARGS, signal2d
 
-def generate_moving_points(std: float = -1) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+def generate_moving_points(std: float = -1) -> Tuple[np.ndarray,
+                                                     np.ndarray,
+                                                     List[np.ndarray]]:
     """Generate moving points example
 
     Args:
-        std (float, optional): Standard deviation, ignored when negative. Defaults to -1.
+        std (float, optional):
+            Standard deviation, ignored when negative. Defaults to -1.
 
     Returns:
        Tuple[np.ndarray, np.ndarray, List[np.ndarray]]: snapshots, timestamps, data

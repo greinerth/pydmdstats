@@ -44,10 +44,7 @@ include = [
 
 [project.optional-dependencies]
 dev = ["anybadge",
-       "pylint",
-       "pylint-exit",
-       "flake8",
-       "autopep8",
+       "ruff",
        "pytest",
        "pytest-coverage",
        "pytest-mypy",

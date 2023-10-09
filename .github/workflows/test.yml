@@ -1,0 +1,32 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v3
+        - name: ruff linting
+          run: ruff varprodmdstatspy
+  pytest:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+    - name: setup python unittests
+      run:  pip install -e .[dev]
+    - name: python unittests
+      run: pytest tests/
+    # - name: make distcheck
+    #   run: make distcheck
+  
