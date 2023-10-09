@@ -74,6 +74,7 @@ The parameters used for the experiments are the default values of the different 
 ### Spatiotemporal Dynamics
 Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
 ```math
+\DeclareMathOperator{\sech}{sech}
 f\left(x, t\right) = \sech\left(x + 3\right)\exp\left(j2.3t\right) + 2\sech\left(x\right)\tanh\left(x\right)\exp\left(j2.8t\right)
 ```
 |![spatiotemporal_stats](./figures/highdim_stats.png)|
@@ -100,7 +101,12 @@ f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^
 |*Damped Oscillations experiment: Expected runtime for BOPDMD and VarProDMD.*|
 
 ### Moving Points
-The moving point experiments consider $128$ samples and consist of $128 \times 128 px$ images.
+The moving point experiments consider $128$ samples and consist of $128 \times 128 px$ images.\
+The formula for generating the images was taken from [here](https://epubs.siam.org/doi/abs/10.1137/15M1023543):
+```math
+f\left(x, y\right) &= \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right)\\
+\Psi_i &= \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)\right)\right)}
+```
 |![moving_points](./figures/moving_points.png)|
 |:-:|
 |*Moving Points experiment: The top row denotes the original (noisy) signal. The bottom rows are the reconstructions of the different approaches.*|
