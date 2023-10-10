@@ -67,7 +67,7 @@ low dimensional space:
 ```
 The formula on how to generate the spatiotemporal dynamics is described in section **Spatiotemporal Dynamics**.\
 The signal consists of $100$ measurements with $1024$ entries $\left(\boldsymbol{X} \in \mathbb{C}^{1024 \times 100}\right)$.\
-The compression is set to $80\%$ ($c = 0.8$), hence $20$ samples are utilized for the optimization.
+The compression is set to $c = 0.8$, hence $20$ samples are utilized for the optimization.
 
 |![lib_select](./figures/varprodmd_highdim_library.png)|
 |:--:|
