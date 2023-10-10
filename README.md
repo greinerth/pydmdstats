@@ -55,15 +55,23 @@ Here is an example of how to visualize the sea surface temperature experiment
 ```
 visualize_stats -p output/SSIM_global_temp.pkl
 ```
-## Low dimensional library selection scheme
-Here is a visualization of how the QR decomposition with Column Pivoting (greedily) selects samples\
-in the projected space.\
-The selection is performed on a *complex* spatiotemporal signal, which is also used in the experiments.
-|![lib_select](./figures/varprodmd_highdim_library_lowdim.png)|
-|:--:|
-|*Spatiotemporal signal: Real- and imaginary part of the signal. Dashed lines indicate library selection in low-dimensional space.*|
+## Library Selection Scheme
+Here is a visualization of how the QR decomposition with Column Pivoting (greedily) selects samples of a spatiotemporal signal\
+in the original (highdimensional) space. The spatiotemporal signal is also utilized in the experiments (cf. section **Spatiotemporal Dyamics**).\
 
-|![highdim_rec](./figures/varprodmd_highdim_library_lowdim_rec.png)|
+Within the experiments the library selection in general is performed in the *projected*\
+low dimensional space:
+```math
+\hat{\boldsymbol{X}} = \boldsymbol{U}^*\boldsymbol{X} = \boldsymbol{\Sigma V}^*
+```
+The formula on how to generate the spatiotemporal dynamics is described in section **Spatiotemporal Dyamics**.\
+The signal consists of $100$ measurements with $1024$ entries $\left(\boldsymbol{X} \in \mathbb{C}^{1024 \times 100}\right)$. The compression is set to $80\%$ ($c = 0.8$), hence $20$ samples are utilized for the optimization.
+
+|![lib_select](./figures/varprodmd_highdim_library.png)|
+|:--:|
+|*Spatiotemporal signal: Real- and imaginary part of the signal. Dashed lines indicate library selection in high dimensional space.*|
+
+|![highdim_rec](./figures/varprodmd_highdim_library_rec.png)|
 |:--:|
 |*Spatiotemporal signal: Reconstructed real- and imaginary parts of the signal. The reconstruction is performed with VarProDMD*|
 
@@ -76,7 +84,7 @@ For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[SSI
 ### Spatiotemporal Dynamics
 Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
 ```math
-f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \frac{2}{\cosh\left(x\right)}\left(x\right)\tanh\left(x\right)\exp\left(j2.8t\right)
+f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \frac{2}{\cosh\left(x\right)}\tanh\left(x\right)\exp\left(j2.8t\right)
 ```
 |![spatiotemporal_stats](./figures/highdim_stats.png)|
 |:-:|
