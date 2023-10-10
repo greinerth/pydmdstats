@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pydmd import BOPDMD
 from pydmd import VarProDMD
-from util.experiment_utils import OPT_ARGS
+from varprodmdstatspy.util.experiment_utils import OPT_ARGS
 
 
 def generate_complex2d(std: float = -1) -> Tuple[np.ndarray,
