@@ -81,7 +81,13 @@ The compression is set to $c = 0.8$, hence $20$ samples are utilized for the opt
 All experiments consider different compressions and varying noise corruption.\
 The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).\
 Depending on the experiment either the mean/expected mean root squared error ($E\left[d\right]$) or the mean/expected Structural Similarity Index ($E\left[\overline{SSIM}\right]$) is computed.\
-For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[\overline{SSIM}\right]$ a value close to 1 is desired, while also having a low expected runtime.
+For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[\overline{SSIM}\right]$ a value close to 1 is desired, while also having a low expected runtime. $\overline{SSIM}$ denotes a weighted\
+structural similarity, since a measurement/image might consist of complex numbers. In this case the measurement or image is treated as image with $2$ channels. Then, the Structural Similarity Index is calculated as weighted sum s.t.
+
+```math
+\overline{SSIM} = \frac{1}{2}SSIM\left(\hat{\boldsymbol{X}}_1, \boldsymbol{X}_1\right) + \frac{1}{2}SSIM\left(\hat{\boldsymbol{X}}_2, \boldsymbol{X}_2\right)
+```
+Here, $\boldsymbol{X}_i$ represents the original image, $\hat{\boldsymbol{X}}_i$ denotes the reconstructed image on the i-th channel respectively.
 
 ### Spatiotemporal Dynamics
 The formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
