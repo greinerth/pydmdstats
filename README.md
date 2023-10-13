@@ -14,8 +14,8 @@ To visualize the results some prerequisites are necessary.\
 First, download this repository and execute the following commands 
 ```
 cd /path/to/repository
-python3.11 -m pip --user install -e .
-python3.11 -m --user -e git+https://github.com/greinerth/PyDMD.git@feature/varpro#egg=pydmd
+python3.11 -m pip install --user -e .
+python3.11 -m pip install --user -e git+https://github.com/greinerth/PyDMD.git@feature/varpro#egg=pydmd
 ```
 For proper visualization of the results make sure LaTex is installed.\
 For a minimal installation open another command line window and execute
