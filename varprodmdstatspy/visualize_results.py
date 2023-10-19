@@ -29,8 +29,9 @@ def visualize_stats():
     with open(__args.path, 'rb') as handle:
         data = pickle.load(handle)
         df = pd.DataFrame(data)
-        runtimes = np.array(df.loc[:, "E[t]"].to_list())
-        compression = np.array(df.loc[:, "c"].to_list())
+        runtimes = df.loc[:, "E[t]"].to_numpy()
+        max_runtine = np.max(runtimes)
+        compression = df.loc[:, "c"].to_numpy()
 
         noise_levels = np.array(sorted(set(df.loc[:, "STD_NOISE"].to_list())))
         msk = df.loc[:, "Method"].to_numpy() == "BOPDMD"
@@ -109,7 +110,7 @@ def visualize_stats():
 
         else:
             raise ValueError("Unsupported Experiment!")
-
+        g0.set(ylim=(0, 1.1 * max_runtine))
         g0.add_legend()
         plt.show()
 
