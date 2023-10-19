@@ -121,7 +121,7 @@ f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^
 The moving point experiments consider $128$ samples and consist of $128 \times 128 px$ images.\
 The formula for generating the images was taken from [here](https://epubs.siam.org/doi/abs/10.1137/15M1023543):
 ```math
-f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)\right)\right)}
+f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)^2\right)\right)}
 ```
 |![moving_points](./figures/moving_points.png)|
 |:-:|
