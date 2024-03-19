@@ -29,7 +29,7 @@ dependencies = [
     "numpy>=1.21.4",
     "scipy>=1.9.3",
     "sympy>=1.8",
-    "matplotlib",
+    "pydmd",
     "scikit-image",
     "seaborn",
     "netCDF4",
