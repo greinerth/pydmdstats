@@ -30,7 +30,8 @@ from varprodmdstatspy.util.experiment_utils import (
     std_checker,
 )
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, filename=__name__)
+# logging.root.setLevel(logging.INFO)
 
 def download(url: str, outdir: str):
     """Download dataset.
@@ -62,7 +63,7 @@ def test_complex2d_signal(
             __img += np.random.normal(0, std, data[i].shape)
         snapshots_flat[:, i] = np.ravel(__img)
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        __dmd = VarProDMD(compression=eps)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -87,7 +88,7 @@ def test_complex2d_signal(
     __stats = (
         exec_times_bop_dmd(snapshots_flat, time, n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(snapshots_flat, time, eps, OPT_ARGS, n_runs)
+        else exec_times_varpro_dmd(snapshots_flat, time, eps, None, n_runs)
     )
 
     return {
@@ -130,7 +131,7 @@ def test_2_moving_points(
     __flat = __flat.astype(np.complex128)
 
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        __dmd = VarProDMD(compression=eps)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -157,7 +158,7 @@ def test_2_moving_points(
     __stats = (
         exec_times_bop_dmd(__flat, time, n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
+        else exec_times_varpro_dmd(__flat, time, eps, None, n_runs)
     )
 
     return {
@@ -209,7 +210,7 @@ def test_global_temp(
         __flat[:, i] = np.ravel(__noisy)[msk]
     __flat = __flat.astype(np.complex128)
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        __dmd = VarProDMD(compression=eps)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -235,7 +236,7 @@ def test_global_temp(
     __stats = (
         exec_times_bop_dmd(__flat, time, n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
+        else exec_times_varpro_dmd(__flat, time, eps, None, n_runs)
     )
 
     return {

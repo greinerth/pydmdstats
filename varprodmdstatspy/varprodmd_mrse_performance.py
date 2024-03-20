@@ -26,7 +26,8 @@ from varprodmdstatspy.util.experiment_utils import (
     std_checker,
 )
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, filename=__name__)
+# logging.root.setLevel(logging.INFO)
 
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
@@ -41,7 +42,7 @@ def test_high_dim_signal(
     # __idx = select_best_samples(z, 2.5e-14)
     # __idx = select_best_samples_fast(z, 0.1)[0]
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        __dmd = VarProDMD(compression=eps)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -57,7 +58,7 @@ def test_high_dim_signal(
     __stats = (
         exec_times_bop_dmd(z_in, time, n_iter=n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(z_in, time, eps, optargs=OPT_ARGS, n_iter=n_runs)
+        else exec_times_varpro_dmd(z_in, time, eps, None, n_iter=n_runs)
     )
 
     return {
