@@ -17,7 +17,8 @@ if __name__ == "__main__":
     z_signal = signal(__x, __time).T
     __x = __x.T
     __time = __time.T
-    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, exact=True)
+    # OPT_ARGS["loss"] = "huber"
+    __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, exact=False)
     __dmd.fit(z_signal, time)
     print(__dmd.eigs.imag)
     __indices = __dmd.selected_samples

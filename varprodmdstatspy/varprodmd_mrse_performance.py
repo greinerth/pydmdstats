@@ -6,9 +6,9 @@ VarProDMD vs BOPDMD on MRSE
 
 import argparse
 import inspect
+import logging
 import os
 import pickle
-import logging
 from itertools import product, starmap
 from typing import Any, Dict
 
@@ -29,6 +29,7 @@ from varprodmdstatspy.util.experiment_utils import (
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
 
+
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
 ) -> Dict[str, Any]:
@@ -42,7 +43,7 @@ def test_high_dim_signal(
     # __idx = select_best_samples(z, 2.5e-14)
     # __idx = select_best_samples_fast(z, 0.1)[0]
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps)
+        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -58,7 +59,7 @@ def test_high_dim_signal(
     __stats = (
         exec_times_bop_dmd(z_in, time, n_iter=n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(z_in, time, eps, None, n_iter=n_runs)
+        else exec_times_varpro_dmd(z_in, time, eps, OPT_ARGS, n_iter=n_runs)
     )
 
     return {
@@ -77,6 +78,7 @@ def run_mrse():
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
     COMPS = [0, 0.2, 0.4, 0.6, 0.8]
+    LOSS = "linear"
 
     currentdir = os.path.dirname(
         os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -121,6 +123,15 @@ def run_mrse():
         dest="runs",
         help=f"Number of runs per configuration [Defaults: {N_RUNS}]",
     )
+    parser.add_argument(
+        "-l",
+        "--loss",
+        type=str,
+        dest="loss",
+        default=LOSS,
+        help=f"Loss function for NLLS optimizer. [Defaults: {LOSS}]",
+    )
+
     __args = parser.parse_args()
     # manager = mp.Manager()
     # results = manager.list()
@@ -131,6 +142,7 @@ def run_mrse():
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
+    OPT_ARGS["loss"] = __args.loss
 
     logging.info("Solver parameters")
     logging.info("=================")
@@ -200,7 +212,7 @@ def run_mrse():
         "N_RUNS": N_RUNS,
     }
 
-    FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}.pkl")
+    FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}_{__args.loss}.pkl")
     logging.info(f"Storing results to {FILE_OUT}")
     with open(FILE_OUT, "wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)

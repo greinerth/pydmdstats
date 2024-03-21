@@ -33,6 +33,7 @@ from varprodmdstatspy.util.experiment_utils import (
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
 
+
 def download(url: str, outdir: str):
     """Download dataset.
     Found on: https://stackoverflow.com/questions/15644964/python-progress-bar-and-downloads
@@ -131,7 +132,7 @@ def test_2_moving_points(
     __flat = __flat.astype(np.complex128)
 
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps)
+        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -158,7 +159,7 @@ def test_2_moving_points(
     __stats = (
         exec_times_bop_dmd(__flat, time, n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, None, n_runs)
+        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
     )
 
     return {
@@ -262,6 +263,7 @@ def run_ssim():
     N_RUNS = 100
     COMPS = [0, 0.4, 0.6, 0.8]
     FCTS = list(fcts.keys())
+    LOSS = "linear"
 
     currentdir = os.path.dirname(
         os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -315,7 +317,17 @@ def run_ssim():
         type=str,
         help=f"Function to run: Available functions: {FCTS}",
     )
+    parser.add_argument(
+        "-l",
+        "--loss",
+        type=str,
+        dest="loss",
+        default=LOSS,
+        help=f"Loss function for NLLS optimizer. [Defaults: {LOSS}]",
+    )
     __args = parser.parse_args()
+
+    OPT_ARGS["loss"] = __args.loss
 
     if __args.fct not in fcts:
         raise KeyError("f{__args.fct} not implemented!")
@@ -336,7 +348,6 @@ def run_ssim():
     STD = __args.std
     COMPS = __args.compression
 
-    
     logging.info("Solver parameters")
     logging.info("=================")
 
@@ -406,7 +417,7 @@ def run_ssim():
         "STD_NOISE": noise_std,
         "N_RUNS": N_RUNS,
     }
-    FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}.pkl")
+    FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}_{__args.loss}.pkl")
 
     logging.info(f"Storing results to {FILE_OUT}")
     with open(FILE_OUT, "wb") as handle:

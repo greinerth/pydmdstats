@@ -1,11 +1,15 @@
-import pytest
-import time
-import numpy as np
+from __future__ import annotations
 
+import time
+
+import numpy as np
+import pytest
 
 from varprodmdstatspy.util.stats import runtime_stats
 
-def test_stats():
+
+def test_stats() -> None:
+    """Test runtime statistics."""
     STD_TIME = 1e-3
     N_RUNS = 100
 
@@ -22,4 +26,3 @@ def test_stats():
 
     assert mean == pytest.approx(10e-3, 0.1)
     assert std == pytest.approx(STD_TIME, 0.1)
-
