@@ -188,7 +188,7 @@ def test_global_temp(
     sst = ds["sst"][:]
     low, high = ds["sst"].valid_range
     n_samples = float(sst.shape[0])
-    dt = YEARS / float(n_samples)
+    dt = float(YEARS) / float(n_samples)
     sst = sst[-128:]
     mean = 0
     var = 0
@@ -211,7 +211,7 @@ def test_global_temp(
         __flat[:, i] = np.ravel(__noisy)[msk]
     __flat = __flat.astype(np.complex128)
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps)
+        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
         __dmd = BOPDMD()
@@ -237,7 +237,7 @@ def test_global_temp(
     __stats = (
         exec_times_bop_dmd(__flat, time, n_runs)
         if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, None, n_runs)
+        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
     )
 
     return {
