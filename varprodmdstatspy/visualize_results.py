@@ -1,12 +1,16 @@
 """Visualize the results of BOPDMD vs VarProDMD"""
 
 import argparse
+import logging
 import os
 import pickle
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+
+logging.basicConfig(level=logging.INFO, filename=__name__)
+# logging.root.setLevel(logging.INFO)
 
 
 def visualize_stats():
@@ -35,7 +39,7 @@ def visualize_stats():
     with open(__args.path, "rb") as handle:
         data = pickle.load(handle)
         df = pd.DataFrame(data)
-        print(df)
+        logging.info(df)
         # df.rename(columns={"E[t]": r"$E\left[t\right]$ in $s$"})
         if "E[SSIM]" in df.columns:
             df.rename(
@@ -85,6 +89,9 @@ def visualize_stats():
             raise ValueError("Unsupported Experiment!")
 
         g0.add_legend()
+        experiment = __args.path.split("/")[-1]
+        experiment = experiment.split(".")[0]
+        g0.figure.canvas.manager.set_window_title(experiment)
         plt.show()
 
 
