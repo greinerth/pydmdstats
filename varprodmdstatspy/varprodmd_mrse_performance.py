@@ -20,8 +20,7 @@ from pydmd.varprodmd import VarProDMD
 from varprodmdstatspy.util.experiment_utils import (
     OPT_ARGS,
     comp_checker,
-    exec_times_bop_dmd,
-    exec_times_varpro_dmd,
+    dmd_stats,
     signal,
     std_checker,
 )
@@ -37,39 +36,25 @@ def test_high_dim_signal(
     x_loc = np.linspace(-10, 10, 1024)
     __x, __time = np.meshgrid(x_loc, time)
     z = signal(__x, __time).T
-    z_in = z.copy()
-    if std > 0:
-        z_in += np.random.normal(0.0, std, size=z.shape)
-    # __idx = select_best_samples(z, 2.5e-14)
-    # __idx = select_best_samples_fast(z, 0.1)[0]
+
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
-        __dmd = BOPDMD()
+        dmd = BOPDMD()
     else:
         raise ValueError(f"{method} not implemented")
 
-    __dmd.fit(z_in, time)
-    omega_size = __dmd.eigs.size
-    dmd_pred = __dmd.forecast(time)
-    mrse_dmd = np.linalg.norm(z - dmd_pred) / np.sqrt(z.shape[-1])
-    del z, dmd_pred
-
-    __stats = (
-        exec_times_bop_dmd(z_in, time, n_iter=n_runs)
-        if method == "BOPDMD"
-        else exec_times_varpro_dmd(z_in, time, eps, OPT_ARGS, n_iter=n_runs)
-    )
+    time_stats, error_stats = dmd_stats(dmd, z, time, std, n_iter=n_runs)
 
     return {
         "case": "High dimensional signal",
-        "omega_size": omega_size,
+        # "omega_size": omega_size,
         "method": method,
-        "MRSE": mrse_dmd,
         "compression": eps,
         "n_runs": n_runs,
-        "stats": __stats,
+        "time_stats": time_stats,
+        "error_stats": error_stats,
         "std": std,
     }
 
@@ -77,7 +62,7 @@ def test_high_dim_signal(
 def run_mrse():
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
-    COMPS = [0, 0.2, 0.4, 0.6, 0.8]
+    COMPS = [0, 0.2, 0.4, 0.6]
     LOSS = "linear"
 
     currentdir = os.path.dirname(
@@ -164,32 +149,42 @@ def run_mrse():
     method_list = []
     exec_time_mean_list = []
     exec_time_std_list = []
-    std_noise = []
-    case_list = []
-    omega_list = []
+    std_noise_list = []
+    # omega_list = []
     mrse_mean_list = []
+    mrse_std_list = []
 
     for res in results:
         logging.info(Fore.CYAN + res["case"])
         method = res["method"]
-        omega_size = res["omega_size"]
-        mean_t = res["stats"].mean
-        var_t = res["stats"].var
+        # omega_size = res["omega_size"]
+        mean_t = res["time_stats"].mean
+        try:
+            std_t = res["time_stats"].std
+        except ZeroDivisionError:
+            std_t = 0.0
+
         __std = res["std"]
         comp_list.append(res["compression"] if res["compression"] > 0 else 0)
         method_list.append(method)
         exec_time_mean_list.append(mean_t)
-        exec_time_std_list.append(np.sqrt(var_t))
-        case_list.append(res["case"])
-        omega_list.append(omega_size)
-        std_noise.append(__std)
-        mean = res["MRSE"]
-        mrse_mean_list.append(mean)
+        exec_time_std_list.append(std_t)
+        # case_list.append(res["case"])
+        # omega_list.append(omega_size)
+        std_noise_list.append(__std)
+        mean_mrse = res["error_stats"].mean
+        try:
+            std_mrse = res["error_stats"].std
+        except ZeroDivisionError:
+            std_mrse = 0.0
 
-        logging.info(Fore.WHITE + f"{method} - Mean RSE: {mean}")
-        logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
+        mrse_mean_list.append(mean_mrse)
+        mrse_std_list.append(std_mrse)
+
+        logging.info(Fore.WHITE + f"{method} - Mean RSE: {mean_mrse}")
+        # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
         stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
-        logging.info(Fore.WHITE + stats.format(method, mean_t, np.sqrt(var_t)))
+        logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
 
         if __std > 0:
             logging.info(Fore.WHITE + f"{method} - Noise STD: {__std}")
@@ -202,14 +197,15 @@ def run_mrse():
 
     data_dict = {
         "Method": method_list,
-        "N_eigs": omega_list,
+        # "N_eigs": omega_list,
         "c": comp_list,
-        "Experiment": case_list,
+        # "Experiment": case_list,
         "E[t]": exec_time_mean_list,
-        "E[RSE]": mrse_mean_list,
-        "STD_NOISE": std_noise,
+        "E[MRSE]": mrse_mean_list,
+        "std[MRSE]": mrse_std_list,
+        "STD_NOISE": std_noise_list,
         "STD_RUNTIME": exec_time_std_list,
-        "N_RUNS": N_RUNS,
+        # "N_RUNS": N_RUNS,
     }
 
     FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}_{__args.loss}.pkl")

@@ -38,6 +38,7 @@ def visualize_stats():
 
     with open(__args.path, "rb") as handle:
         data = pickle.load(handle)
+
         df = pd.DataFrame(data)
         logging.info(df)
         # df.rename(columns={"E[t]": r"$E\left[t\right]$ in $s$"})
@@ -63,7 +64,7 @@ def visualize_stats():
                 alpha=0.5,
             )
 
-        elif "E[RSE]" in df.columns:
+        elif "E[MRSE]" in df.columns:
             df.rename(
                 {
                     "E[RSE]": r"$E\left[d\right]$ in $m$",

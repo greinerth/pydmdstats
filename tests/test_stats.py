@@ -5,10 +5,27 @@ import time
 import numpy as np
 import pytest
 
-from varprodmdstatspy.util.stats import runtime_stats
+from varprodmdstatspy.util.stats import runtime_stats, Stats
 
 
 def test_stats() -> None:
+    """ Test running mean/variance."""
+    stats = Stats()
+    for _ in range(100):
+        stats.push(5.0)
+
+    assert stats.mean == 5.0
+    assert stats.var == 0.0
+    assert stats.std == 0.0
+
+    stats.reset()
+
+    msg = "Need more samples!"
+    with pytest.raises(ZeroDivisionError, match=msg):
+        stats.var
+
+
+def test_runtime_stats() -> None:
     """Test runtime statistics."""
     STD_TIME = 1e-3
     N_RUNS = 100

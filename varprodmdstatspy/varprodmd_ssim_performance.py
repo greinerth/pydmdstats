@@ -23,10 +23,9 @@ from pydmd.varprodmd import VarProDMD
 from varprodmdstatspy.util.experiment_utils import (
     OPT_ARGS,
     comp_checker,
-    exec_times_bop_dmd,
-    exec_times_varpro_dmd,
+    dmd_stats,
+    dmd_stats_global_temp,
     signal2d,
-    ssim_multi_images,
     std_checker,
 )
 
@@ -57,49 +56,28 @@ def test_complex2d_signal(
         )
         for t in time
     ]
-    snapshots_flat = np.zeros((np.prod(data[0].shape), len(data)), dtype=complex)
-    for i in range(len(data)):
-        __img = data[i].copy()
-        if std > 0:
-            __img += np.random.normal(0, std, data[i].shape)
-        snapshots_flat[:, i] = np.ravel(__img)
+
+    data = np.concatenate(data, axis=0)
+
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
-        __dmd = BOPDMD()
+        dmd = BOPDMD()
 
     else:
         raise ValueError(f"{method} not implemented")
 
-    __dmd.fit(snapshots_flat, time)
-    omega_size = __dmd.eigs.size
-    __dmd_pred = __dmd.forecast(time)
-    dmd_rec = []
-    data_in = []
-    for i in range(snapshots_flat.shape[-1]):
-        __dmd_rec = __dmd_pred[:, i].reshape(data[0].shape)
-        dmd_rec.append(np.concatenate([__dmd_rec.real, __dmd_rec.imag], axis=-1))
-        data_in.append(np.concatenate([data[i].real, data[i].imag], axis=-1))
-    dmd_rec = np.concatenate(dmd_rec, axis=0)
-    data_in = np.concatenate(data_in, axis=0)
-    mean, var = ssim_multi_images(data_in, dmd_rec)
-    del data_in, data, dmd_rec
-
-    __stats = (
-        exec_times_bop_dmd(snapshots_flat, time, n_runs)
-        if method == "BOPDMD"
-        else exec_times_varpro_dmd(snapshots_flat, time, eps, OPT_ARGS, n_runs)
-    )
+    time_stats, error_stats = dmd_stats(dmd, data, time, std, n_runs)
 
     return {
-        "case": "Complex 2D signal",
-        "omega_size": omega_size,
+        # "case": "Complex 2D signal",
+        # "omega_size": omega_size,
         "method": method,
-        "SSIM": (mean, var),
+        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "stats": __stats,
+        "time_stats": time_stats,
         "std": std,
     }
 
@@ -115,61 +93,30 @@ def test_2_moving_points(
     time = np.linspace(0, 5, 128)
     x, y = np.meshgrid(np.arange(-64, 64), np.arange(-64, 64))
     imgs = np.zeros((time.size, 128, 128))
-    noisy_imgs = np.zeros_like(imgs)
-    mean: float = 0.0
-    var: float = 0.0
-    omega_size: int = 0
+
     for i in range(time.size):
         imgs[i] = signal2d(x, y, x_0, y_0, velocity, time[i])
-        noisy_imgs[i] = imgs[i].copy()
-        if std > 0:
-            noisy_imgs[i] += np.random.normal(0, std, noisy_imgs[0].shape)
 
     imgs = np.expand_dims(imgs, axis=-1)
-    __flat = np.zeros((128 * 128, time.size))
-    for i in range(imgs.shape[0]):
-        __flat[:, i] = noisy_imgs[i].ravel()
-    __flat = __flat.astype(np.complex128)
 
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
-        __dmd = BOPDMD()
+        dmd = BOPDMD()
 
     else:
         raise ValueError(f"{method} not implemented")
 
-    __dmd.fit(__flat, time)
-
-    del noisy_imgs
-
-    omega_size = __dmd.eigs.size
-    __dmd_pred = __dmd.forecast(time)
-    dmd_rec = []
-
-    for i in range(__flat.shape[-1]):
-        __dmd_rec = np.expand_dims(__dmd_pred[:, i].reshape(imgs.shape[1:]), axis=0)
-        dmd_rec.append(__dmd_rec.real)
-    dmd_rec = np.concatenate(dmd_rec, axis=0)
-    mean, var = ssim_multi_images(imgs, dmd_rec)
-
-    del imgs, dmd_rec
-
-    __stats = (
-        exec_times_bop_dmd(__flat, time, n_runs)
-        if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
-    )
-
+    time_stats, error_stats = dmd_stats(dmd, imgs, time, std, n_runs)
     return {
         "case": "Moving points",
-        "omega_size": omega_size,
+        # "omega_size": omega_size,
         "method": method,
-        "SSIM": (mean, var),
+        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "stats": __stats,
+        "time_stats": time_stats,
         "std": std,
     }
 
@@ -188,66 +135,35 @@ def test_global_temp(
     sst = ds["sst"][:]
     low, high = ds["sst"].valid_range
     n_samples = float(sst.shape[0])
-    dt = float(YEARS) / float(n_samples)
     sst = sst[-128:]
-    mean = 0
-    var = 0
-    time = np.arange(sst.shape[0]) * dt
+    dt = (float(YEARS) / float(n_samples)) * sst.shape[0]
+
+    time = np.linspace(0, dt, sst.shape[0])
     img0 = sst[0]
     # img0 = img0[::-1, ::]
     msk = ~(img0 < low)
     msk &= ~(img0 > high)
 
-    # remember invalid numbers from flipped original image
+    # remember invalid numbers from flipped original ime
     # need to invert once again else not the correct values are remembered
-    rows, cols = np.where(~msk)
-    msk = np.ravel(msk)
-    __flat = np.zeros(shape=(np.sum(msk), sst.shape[0]))
-    for i in range(sst.shape[0]):
-        __img = sst[i]
-        __noisy = __img.copy()
-        if std > 0:
-            __noisy += np.random.normal(0.0, std, size=__img.shape)
-        __flat[:, i] = np.ravel(__noisy)[msk]
-    __flat = __flat.astype(np.complex128)
+
     if method == "VarProDMD":
-        __dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
+        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
 
     elif method == "BOPDMD":
-        __dmd = BOPDMD()
+        dmd = BOPDMD()
     else:
         raise ValueError(f"{method} not implemented")
 
-    __dmd.fit(__flat, time)
-    omega_size = __dmd.eigs.size
-    __dmd_pred = __dmd.forecast(time).real
-    dmd_rec = []
-    for i in range(__flat.shape[-1]):
-        __flat_in = np.zeros((msk.shape[-1],))
-        __flat_in[msk] = __dmd_pred[:, i].real
-        __dmd_rec = np.expand_dims(__flat_in.reshape([1] + list(sst[0].shape)), axis=-1)
-        dmd_rec.append(__dmd_rec)
-    dmd_rec = np.concatenate(dmd_rec, axis=0)
-    # sst = sst[:, ::-1, :]
-    sst[:, rows, cols] = 0.0
-    mean, var = ssim_multi_images(np.expand_dims(sst, axis=-1), dmd_rec)
-
-    del sst, ds, dmd_rec
-
-    __stats = (
-        exec_times_bop_dmd(__flat, time, n_runs)
-        if method == "BOPDMD"
-        else exec_times_varpro_dmd(__flat, time, eps, OPT_ARGS, n_runs)
-    )
-
+    time_stats, error_stats = dmd_stats_global_temp(dmd, sst, msk, time, std, n_runs)
     return {
-        "case": "Global temperature",
-        "omega_size": omega_size,
+        # "case": "Global temperature",
+        # "omega_size": omega_size,
         "method": method,
-        "SSIM": (mean, var),
+        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "stats": __stats,
+        "time_stats": time_stats,
         "std": std,
     }
 
@@ -260,8 +176,8 @@ def run_ssim():
     }
 
     STD = [0, 1e-4, 1e-3, 1e-2]
-    N_RUNS = 100
-    COMPS = [0, 0.4, 0.6, 0.8]
+    N_RUNS = 10
+    COMPS = [0.0, 0.2, 0.4, 0.6]
     FCTS = list(fcts.keys())
     LOSS = "linear"
 
@@ -370,33 +286,43 @@ def run_ssim():
     exec_time_mean_list = []
     exec_time_std_list = []
     noise_std = []
-    case_list = []
-    omega_list = []
+    # case_list = []
+    # omega_list = []
     ssim_mean_list = []
-    ssim_var_list = []
+    ssim_std_list = []
 
     for res in results:
-        logging.info(Fore.CYAN + res["case"])
+        # logging.info(Fore.CYAN + res["case"])
         method = res["method"]
-        omega_size = res["omega_size"]
-        mean_t = res["stats"].mean
-        var_t = res["stats"].var
+        # omega_size = res["omega_size"]
+        mean_t = res["time_stats"].mean
+        try:
+            std_t = res["time_stats"].std
+        except ZeroDivisionError:
+            std_t = 0.0
         __std = res["std"]
         comp_list.append(res["compression"] if res["compression"] > 0 else 0)
         method_list.append(method)
         exec_time_mean_list.append(mean_t)
-        exec_time_std_list.append(np.sqrt(var_t))
-        case_list.append(res["case"])
-        omega_list.append(omega_size)
-        mean, var = res["SSIM"]
-        ssim_mean_list.append(mean)
-        ssim_var_list.append(var)
+        exec_time_std_list.append(std_t)
+        # case_list.append(res["case"])
+        # omega_list.append(omega_size)
+        mean_ssim = res["error_stats"].mean
+        try:
+            std_ssim = res["error_stats"].std
+        except ZeroDivisionError:
+            std_ssim = 0.0
+
+        ssim_mean_list.append(mean_ssim)
+        ssim_std_list.append(std_ssim)
         noise_std.append(__std)
 
-        logging.info(Fore.WHITE + f"{method} - Mean SSIM: {mean}, Var SSIM: {var}")
-        logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
+        logging.info(
+            Fore.WHITE + f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
+        )
+        # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
         stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
-        logging.info(Fore.WHITE + stats.format(method, mean_t, np.sqrt(var_t)))
+        logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
         if __std > 0:
             logging.info(Fore.WHITE + f"{method} - Noise STD: {__std}")
         if method == "VarProDMD":
@@ -407,12 +333,12 @@ def run_ssim():
 
     data_dict = {
         "Method": method_list,
-        "N_eigs": omega_list,
+        # "N_eigs": omega_list,
         "c": comp_list,
-        "Experiment": case_list,
+        # "Experiment": case_list,
         "E[t]": exec_time_mean_list,
         "E[SSIM]": ssim_mean_list,
-        "SSIM_VAR": ssim_var_list,
+        "SSIM_STD": ssim_std_list,
         "STD_RUNTIME": exec_time_std_list,
         "STD_NOISE": noise_std,
         "N_RUNS": N_RUNS,
