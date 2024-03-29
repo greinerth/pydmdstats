@@ -1,26 +1,31 @@
-""" utility functions for OptDMD experiments
-"""
-from typing import Tuple, Dict, Any
+"""utility functions for OptDMD experiments"""
+
+import timeit
+from typing import Any, Dict, Tuple
 
 import numpy as np
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 from skimage.metrics import structural_similarity as ssim
+
 import varprodmdstatspy.util.stats as stats
 
 OPT_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
-    "method": 'trf',
-    "tr_solver": 'exact',
+    "method": "trf",
+    "tr_solver": "exact",
     # "x_scale": 'jac',
 }
 
-def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
-             y_in: np.ndarray,
-             x_0: np.ndarray,
-             y_0: np.ndarray,
-             velocity: float,
-             time: float,
-             sigma: float = 0.1) -> np.ndarray:
+
+def signal2d(
+    x_in: np.ndarray,  # pylint: disable=unused-variable
+    y_in: np.ndarray,
+    x_0: np.ndarray,
+    y_0: np.ndarray,
+    velocity: float,
+    time: float,
+    sigma: float = 0.1,
+) -> np.ndarray:
     """Create 2D signal (2 moving points with different velocities)
 
     Args:
@@ -38,12 +43,15 @@ def signal2d(x_in: np.ndarray,  # pylint: disable=unused-variable
     y_diff_square_fast = np.square(y_in - y_0[0])
     x_diff_square_slow = np.square(x_in - x_0[1])
     y_diff_square_slow = np.square(y_in - velocity * time - y_0[1])
-    return np.exp(-sigma * (x_diff_square_fast + y_diff_square_fast)) + \
-        np.exp(-sigma*(x_diff_square_slow + y_diff_square_slow))
+    return np.exp(-sigma * (x_diff_square_fast + y_diff_square_fast)) + np.exp(
+        -sigma * (x_diff_square_slow + y_diff_square_slow)
+    )
 
 
-def signal(x_loc: np.ndarray,  # pylint: disable=unused-variable
-           time: np.ndarray) -> np.ndarray:
+def signal(
+    x_loc: np.ndarray,  # pylint: disable=unused-variable
+    time: np.ndarray,
+) -> np.ndarray:
     """Create high dimensional (complex) signal
 
     Args:
@@ -53,13 +61,15 @@ def signal(x_loc: np.ndarray,  # pylint: disable=unused-variable
     Returns:
         np.ndarray: Complex surface
     """
-    __f_1 = 1. / np.cosh(x_loc + 3) * np.exp(1j*2.3*time)
-    __f_2 = 2. / np.cosh(x_loc) * np.tanh(x_loc) * np.exp(1j*2.8*time)
+    __f_1 = 1.0 / np.cosh(x_loc + 3) * np.exp(1j * 2.3 * time)
+    __f_2 = 2.0 / np.cosh(x_loc) * np.tanh(x_loc) * np.exp(1j * 2.8 * time)
     return __f_1 + __f_2
 
 
-def ssim_multi_images(imgs_baseline: np.ndarray,  # pylint: disable=unused-variable
-                      imgs_reconst: np.ndarray) -> Tuple[float, float]:
+def ssim_multi_images(
+    imgs_baseline: np.ndarray,  # pylint: disable=unused-variable
+    imgs_reconst: np.ndarray,
+) -> Tuple[float, float]:
     """Compute SSIM on a collection of images
 
     Args:
@@ -72,39 +82,32 @@ def ssim_multi_images(imgs_baseline: np.ndarray,  # pylint: disable=unused-varia
     Returns:
         float: Mean and Variance of SSIM
     """
-    mean: float = 0
-    prev_mean: float = 0
-    var_hat: float = 0
-    i: int = 0
-
     if len(imgs_baseline.shape) != len(imgs_baseline.shape):
         raise ValueError("Invalid dimensions of images")
 
-    for __i, __j in zip(imgs_baseline.shape, imgs_reconst.shape):
-        if __i != __j:
+    for i, j in zip(imgs_baseline.shape, imgs_reconst.shape):
+        if i != j:
             raise ValueError("Invalid dimensions of images")
 
     channels = imgs_baseline.shape[-1]
-    weight = 1. / float(channels)
+    weight = 1.0 / float(channels)
+    ssim_stats = stats.Stats()
 
     for i in range(imgs_baseline.shape[0]):
-        __res: float = 0
-        for __c in range(channels):
-            __res += weight * ssim(imgs_baseline[i, :, :, __c],
-                                   imgs_reconst[i, :, :, __c],
-                                   data_range=imgs_reconst[i, :, :, __c].max()
-                                   - imgs_reconst[i, :, :, __c].min(),
-                                   sigma=1.5,
-                                   use_sample_covariance=False,
-                                   gaussian_weights=True)
-        delta = (__res - mean)
-        mean = prev_mean + delta / float(i + 1)
-        var_hat = delta * (__res - prev_mean)
-        prev_mean = mean
+        res: float = 0
+        for channel in range(channels):
+            res += weight * ssim(
+                imgs_baseline[i, :, :, channel],
+                imgs_reconst[i, :, :, channel],
+                data_range=imgs_reconst[i, :, :, channel].max()
+                - imgs_reconst[i, :, :, channel].min(),
+                sigma=1.5,
+                use_sample_covariance=False,
+                gaussian_weights=True,
+            )
+        ssim_stats.push(res)
 
-    var = var_hat / float(i) if i > 0 else 0
-
-    return mean, var
+    return ssim_stats.mean, ssim_stats.var
 
 
 def std_checker(x_in: any) -> float:  # pylint: disable=unused-variable
@@ -134,13 +137,12 @@ def comp_checker(x_in: any) -> float:  # pylint: disable=unused-variable
     """
     __comp = abs(float(x_in))
     if not 0 <= __comp < 1:
-        raise ValueError(
-            "Invalid Compression. Values needs to be between [0, 1)!")
+        raise ValueError("Invalid Compression. Values needs to be between [0, 1)!")
     return __comp
 
 
 def bopdmd_wrapper(data, time):  # pylint: disable=unused-variable
-    """ Dummy function to force optimization execution of BOPDMD class
+    """Dummy function to force optimization execution of BOPDMD class
 
     Args:
         data (np.ndarray): Measurements for OptDMD
@@ -150,11 +152,10 @@ def bopdmd_wrapper(data, time):  # pylint: disable=unused-variable
     __bop_dmd.fit(data, time)
 
 
-def varprodmd_wrapper(data: np.ndarray,
-                   time: np.ndarray,
-                   optargs: Dict[str, Any],
-                   eps: float = 1e-2):  # pylint: disable=unused-variable
-    """ Dummy function to force optimization execution of VarProDMD class
+def varprodmd_wrapper(
+    data: np.ndarray, time: np.ndarray, optargs: Dict[str, Any], eps: float = 1e-2
+):  # pylint: disable=unused-variable
+    """Dummy function to force optimization execution of VarProDMD class
 
     Args:
         data (np.ndarray): Measurements for VarProDMD
@@ -166,32 +167,168 @@ def varprodmd_wrapper(data: np.ndarray,
     __varpro_dmd.fit(data, time)
 
 
-def exec_times_varpro_dmd(data: np.ndarray,  # pylint: disable=unused-variable
-                         time: np.ndarray,
-                         comp: float,
-                         optargs: Dict[str, Any] = OPT_ARGS,
-                         n_iter: int = 100) -> stats.ExecutionStats:
+def _corrupt_data(data: np.ndarray, std: float) -> np.ndarray:
+    _data = data.copy()
+
+    if std > 0:
+        if np.iscomplexobj(data):
+            _data.real += np.random.normal(0.0, std, size=data.real.shape)
+            _data.imag += np.random.normal(0.0, std, size=data.imag.shape)
+        else:
+            _data += np.random.normal(0.0, std, size=data.shape)
+
+    return _data
+
+
+def _flatten(data: np.ndarray) -> np.ndarray:
+    flat = np.zeros((np.prod(data.shape[1:]), data.shape[0]), dtype=data.dtype)
+    for i in range(data.shape[0]):
+        flat[:, i] = np.ravel(data[i])
+    return flat
+
+
+def _flat2images(flat: np.ndarray, shape: np.shape) -> np.ndarray:
+    out = []
+    is_complex = np.iscomplexobj(flat)
+
+    for i in range(flat.shape[-1]):
+        img = flat[:, i].reshape(shape[1:])
+
+        if is_complex:
+            img = np.concatenate([img.real, img.imag], axis=-1)
+        img = np.expand_dims(img, axis=0)
+        out.append(img)
+
+    return np.concatenate(out, axis=0)
+
+
+def _complex2realimgs(imgs: np.ndarray) -> np.ndarray:
+    out = []
+
+    for i in range(imgs.shape[0]):
+        real_img = imgs[i].real
+        imag_img = imgs[i].imag
+        img = np.concatenate([real_img, imag_img], axis=-1)
+        out.append(np.expand_dims(img, axis=0))
+
+    return np.concatenate(out, axis=0)
+
+
+def dmd_stats(
+    dmd: VarProDMD | BOPDMD,
+    data: np.ndarray,  # pylint: disable=unused-variable
+    time: np.ndarray,
+    std: float,
+    n_iter: int = 100,
+) -> tuple[stats.Stats, stats.Stats]:
     """Wrapper functions for timing purposes
 
     Args:
         data (np.ndarray): Input for OptDMD
         time (np.ndarray): time stamps, where mesaurements where taken
-        comp (float): Compression for library selection.
         n_iter (int, optional): Number of iterations to execute. Defaults to 100.
 
     Returns:
         stats.ExecutionStats: Runtime statistics (Mean and variance)
     """
 
-    wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
-    for __ in range(n_iter):
-        wrapper(data, time, optargs, comp)
-    return wrapper
+    # wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
+    timestats = stats.Stats()
+    error_stats = stats.Stats()
+    is_complex = np.iscomplexobj(data)
+    is_img = len(data.shape) > 2
+    calc_error = True
+
+    for _ in range(n_iter):
+        if isinstance(dmd, BOPDMD):
+            dmd._init_alpha = None
+
+        _data = _corrupt_data(data, std)
+
+        if is_img:
+            _data = _flatten(data)
+
+        t0 = timeit.default_timer()
+        dmd.fit(_data, time)
+        dt = timeit.default_timer() - t0
+        timestats.push(dt)
+
+        if calc_error:
+            pred = dmd.forecast(time)
+            error = 0.0
+
+            if is_img:
+                pred_in = _flat2images(pred if is_complex else pred.real, data.shape)
+                data_in = data if not is_complex else _complex2realimgs(data)
+                error = ssim_multi_images(data_in, pred_in)[0]
+            else:
+                error = np.linalg.norm(
+                    data - (pred if is_complex else pred.real)
+                ) / np.sqrt(data.shape[-1])
+
+            error_stats.push(error)
+            calc_error = std > 0.0
+        # wrapper(data, time, optargs, comp)
+    return timestats, error_stats
 
 
-def exec_times_bop_dmd(data: np.ndarray,  # pylint: disable=unused-variable
-                       time: np.ndarray,
-                       n_iter: int = 100) -> stats.ExecutionStats:
+def dmd_stats_global_temp(
+    dmd: VarProDMD | BOPDMD,
+    data: np.ndarray,  # pylint: disable=unused-variable
+    msk_valid: np.ndarray,
+    time: np.ndarray,
+    std: float,
+    n_iter: int = 100,
+) -> tuple[stats.Stats, stats.Stats]:
+    """Wrapper functions for timing purposes
+
+    Args:
+        data (np.ndarray): Input for OptDMD
+        time (np.ndarray): time stamps, where mesaurements where taken
+        n_iter (int, optional): Number of iterations to execute. Defaults to 100.
+
+    Returns:
+        stats.ExecutionStats: Runtime statistics (Mean and variance)
+    """
+
+    # wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
+    timestats = stats.Stats()
+    error_stats = stats.Stats()
+    calc_error = True
+    rows, cols = np.where(~msk_valid)
+    msk_flat = np.ravel(msk_valid)
+    data[:, rows, cols] = 0.0
+
+    for _ in range(n_iter):
+        if isinstance(dmd, BOPDMD):
+            dmd._init_alpha = None
+
+        _data = _corrupt_data(data, std)
+        _data = _flatten(_data)[msk_flat, :]
+
+        t0 = timeit.default_timer()
+        dmd.fit(_data, time)
+        dt = timeit.default_timer() - t0
+        timestats.push(dt)
+
+        if calc_error:
+            pred = dmd.forecast(time)
+            flat_in = np.zeros((msk_flat.shape[-1],))
+            for i in range(pred.shape[-1]):
+                flat_in[:, i] = pred[:, i].real
+            pred_in = _flat2images(flat_in)
+            error = ssim_multi_images(data, pred_in)[0]
+            error_stats.push(error)
+            calc_error = std > 0.0
+        # wrapper(data, time, optargs, comp)
+    return timestats, error_stats
+
+
+def exec_times_bop_dmd(
+    data: np.ndarray,  # pylint: disable=unused-variable
+    time: np.ndarray,
+    n_iter: int = 100,
+) -> stats.Stats:
     """Wrapper function for timing purposes
 
     Args:
@@ -202,7 +339,14 @@ def exec_times_bop_dmd(data: np.ndarray,  # pylint: disable=unused-variable
     Returns:
         stats.ExecutionStats: Return the execution statistics
     """
-    __wrapper = stats.runtime_stats(False)(bopdmd_wrapper)
-    for __ in range(n_iter):
-        __wrapper(data, time)
-    return __wrapper
+    # __wrapper = stats.runtime_stats(False)(bopdmd_wrapper)
+    timestats = stats.Stats()
+    for _ in range(n_iter):
+        # __wrapper(data, time)
+        dmd = BOPDMD()
+        t0 = timeit.default_timer()
+        dmd.fit(data, time)
+        dt = timeit.default_timer() - t0
+        timestats.push(dt)
+
+    return timestats
