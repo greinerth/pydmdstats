@@ -67,7 +67,7 @@ def visualize_stats():
         elif "E[MRSE]" in df.columns:
             df.rename(
                 {
-                    "E[RSE]": r"$E\left[d\right]$ in $m$",
+                    "E[MRSE]": r"$E\left[d\right]$ in $m$",
                     "E[t]": r"$E\left[t\right]$ in $s$",
                     "STD_NOISE": r"$\sigma_{std}$",
                     "c": r"$c_{comp}$",

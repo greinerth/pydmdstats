@@ -21,7 +21,6 @@ from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 
 from varprodmdstatspy.util.experiment_utils import (
-    OPT_ARGS,
     comp_checker,
     dmd_stats,
     dmd_stats_global_temp,
@@ -31,7 +30,7 @@ from varprodmdstatspy.util.experiment_utils import (
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
-
+OPT_ARGS = {"method": 'trf', "tr_solver": 'exact', "loss": 'linear'}
 
 def download(url: str, outdir: str):
     """Download dataset.
@@ -176,10 +175,9 @@ def run_ssim():
     }
 
     STD = [0, 1e-4, 1e-3, 1e-2]
-    N_RUNS = 10
-    COMPS = [0.0, 0.2, 0.4, 0.6]
+    N_RUNS = 100
+    COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
     FCTS = list(fcts.keys())
-    LOSS = "linear"
 
     currentdir = os.path.dirname(
         os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -233,17 +231,8 @@ def run_ssim():
         type=str,
         help=f"Function to run: Available functions: {FCTS}",
     )
-    parser.add_argument(
-        "-l",
-        "--loss",
-        type=str,
-        dest="loss",
-        default=LOSS,
-        help=f"Loss function for NLLS optimizer. [Defaults: {LOSS}]",
-    )
-    __args = parser.parse_args()
 
-    OPT_ARGS["loss"] = __args.loss
+    __args = parser.parse_args()
 
     if __args.fct not in fcts:
         raise KeyError("f{__args.fct} not implemented!")
@@ -279,8 +268,6 @@ def run_ssim():
     for std in STD:
         __args_in.append(("BOPDMD", N_RUNS, std, 0))
 
-    results = list(starmap(fcts[__args.fct], __args_in))
-
     comp_list = []
     method_list = []
     exec_time_mean_list = []
@@ -291,7 +278,7 @@ def run_ssim():
     ssim_mean_list = []
     ssim_std_list = []
 
-    for res in results:
+    for res in starmap(fcts[__args.fct], __args_in):
         # logging.info(Fore.CYAN + res["case"])
         method = res["method"]
         # omega_size = res["omega_size"]
@@ -343,7 +330,8 @@ def run_ssim():
         "STD_NOISE": noise_std,
         "N_RUNS": N_RUNS,
     }
-    FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}_{__args.loss}.pkl")
+    loss = OPT_ARGS["loss"]
+    FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl")
 
     logging.info(f"Storing results to {FILE_OUT}")
     with open(FILE_OUT, "wb") as handle:

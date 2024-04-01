@@ -18,7 +18,6 @@ from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
 
 from varprodmdstatspy.util.experiment_utils import (
-    OPT_ARGS,
     comp_checker,
     dmd_stats,
     signal,
@@ -27,7 +26,7 @@ from varprodmdstatspy.util.experiment_utils import (
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
-
+OPT_ARGS = {"method": 'trf', "tr_solver": 'exact', "loss": 'linear'}
 
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
@@ -62,8 +61,7 @@ def test_high_dim_signal(
 def run_mrse():
     STD = [0, 1e-4, 1e-3, 1e-2]
     N_RUNS = 100
-    COMPS = [0, 0.2, 0.4, 0.6]
-    LOSS = "linear"
+    COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
 
     currentdir = os.path.dirname(
         os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -108,42 +106,28 @@ def run_mrse():
         dest="runs",
         help=f"Number of runs per configuration [Defaults: {N_RUNS}]",
     )
-    parser.add_argument(
-        "-l",
-        "--loss",
-        type=str,
-        dest="loss",
-        default=LOSS,
-        help=f"Loss function for NLLS optimizer. [Defaults: {LOSS}]",
-    )
 
     __args = parser.parse_args()
     # manager = mp.Manager()
     # results = manager.list()
-    results = []
+
     if not os.path.exists(__args.out):
         os.makedirs(__args.out)
 
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
-    OPT_ARGS["loss"] = __args.loss
 
     logging.info("Solver parameters")
     logging.info("=================")
-
-    for key in OPT_ARGS:
-        logging.info(f"{key}: {OPT_ARGS[key]}")
-
     logging.info("\nStarting simulation...")
-    __args_in = []
+    
+    args_in = []
     for comp, std in product(COMPS, STD):
-        __args_in.append(("VarProDMD", N_RUNS, std, comp))
+        args_in.append(("VarProDMD", N_RUNS, std, comp))
 
     for std in STD:
-        __args_in.append(("BOPDMD", N_RUNS, std, 0))
-
-    results = list(starmap(test_high_dim_signal, __args_in))
+        args_in.append(("BOPDMD", N_RUNS, std, 0))
 
     comp_list = []
     method_list = []
@@ -154,7 +138,7 @@ def run_mrse():
     mrse_mean_list = []
     mrse_std_list = []
 
-    for res in results:
+    for res in starmap(test_high_dim_signal, args_in):
         logging.info(Fore.CYAN + res["case"])
         method = res["method"]
         # omega_size = res["omega_size"]
@@ -207,8 +191,8 @@ def run_mrse():
         "STD_RUNTIME": exec_time_std_list,
         # "N_RUNS": N_RUNS,
     }
-
-    FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}_{__args.loss}.pkl")
+    loss = OPT_ARGS["loss"]
+    FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}_{loss}.pkl")
     logging.info(f"Storing results to {FILE_OUT}")
     with open(FILE_OUT, "wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)

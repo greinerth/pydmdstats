@@ -313,11 +313,13 @@ def dmd_stats_global_temp(
 
         if calc_error:
             pred = dmd.forecast(time)
-            flat_in = np.zeros((msk_flat.shape[-1],))
+            flat_in = np.zeros((msk_flat.shape[-1], pred.shape[-1]))
             for i in range(pred.shape[-1]):
-                flat_in[:, i] = pred[:, i].real
-            pred_in = _flat2images(flat_in)
-            error = ssim_multi_images(data, pred_in)[0]
+                flat_in[msk_flat, i] = pred[:, i].real
+            pred_in = _flat2images(flat_in, data.shape)
+            error = ssim_multi_images(
+                np.expand_dims(data, axis=-1), np.expand_dims(pred_in, axis=-1)
+            )[0]
             error_stats.push(error)
             calc_error = std > 0.0
         # wrapper(data, time, optargs, comp)
