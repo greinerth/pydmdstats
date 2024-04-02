@@ -14,8 +14,6 @@ from typing import Any, Dict
 
 import numpy as np
 from colorama import Fore
-from pydmd.bopdmd import BOPDMD
-from pydmd.varprodmd import VarProDMD
 
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
@@ -26,8 +24,10 @@ from varprodmdstatspy.util.experiment_utils import (
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
-OPT_ARGS = {"method": 'trf', "tr_solver": 'exact', "loss": 'linear'}
+OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
+
+# OPT_ARGS = {"method": 'lm', "loss": 'linear'}
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
 ) -> Dict[str, Any]:
@@ -36,24 +36,21 @@ def test_high_dim_signal(
     __x, __time = np.meshgrid(x_loc, time)
     z = signal(__x, __time).T
 
-    if method == "VarProDMD":
-        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
-
-    elif method == "BOPDMD":
-        dmd = BOPDMD()
-    else:
-        raise ValueError(f"{method} not implemented")
-
-    time_stats, error_stats = dmd_stats(dmd, z, time, std, n_iter=n_runs)
-
+    # time_stats, error_stats = dmd_stats(dmd, z, time, std, n_iter=n_runs)
+    mean_err, mean_dt, c_xx, c_xy, c_yy = dmd_stats(
+        method, z, time, std, OPT_ARGS, eps, n_iter=n_runs
+    )
     return {
         "case": "High dimensional signal",
         # "omega_size": omega_size,
         "method": method,
         "compression": eps,
         "n_runs": n_runs,
-        "time_stats": time_stats,
-        "error_stats": error_stats,
+        "mean_err": mean_err,
+        "mean_dt": mean_dt,
+        "c_xx": c_xx,
+        "c_xy": c_xy,
+        "c_yy": c_yy,
         "std": std,
     }
 
@@ -121,7 +118,7 @@ def run_mrse():
     logging.info("Solver parameters")
     logging.info("=================")
     logging.info("\nStarting simulation...")
-    
+
     args_in = []
     for comp, std in product(COMPS, STD):
         args_in.append(("VarProDMD", N_RUNS, std, comp))
@@ -132,46 +129,38 @@ def run_mrse():
     comp_list = []
     method_list = []
     exec_time_mean_list = []
-    exec_time_std_list = []
+    c_xx_list = []
+    c_xy_list = []
+    c_yy_list = []
+    # exec_time_std_list = []
     std_noise_list = []
     # omega_list = []
     mrse_mean_list = []
-    mrse_std_list = []
 
     for res in starmap(test_high_dim_signal, args_in):
         logging.info(Fore.CYAN + res["case"])
-        method = res["method"]
-        # omega_size = res["omega_size"]
-        mean_t = res["time_stats"].mean
-        try:
-            std_t = res["time_stats"].std
-        except ZeroDivisionError:
-            std_t = 0.0
 
-        __std = res["std"]
+        std = res["std"]
+        method = res["method"]
+        mean_mrse = res["mean_err"]
+        mean_t = res["mean_dt"]
+        std_t = np.sqrt(res["c_yy"])
         comp_list.append(res["compression"] if res["compression"] > 0 else 0)
         method_list.append(method)
         exec_time_mean_list.append(mean_t)
-        exec_time_std_list.append(std_t)
-        # case_list.append(res["case"])
-        # omega_list.append(omega_size)
-        std_noise_list.append(__std)
-        mean_mrse = res["error_stats"].mean
-        try:
-            std_mrse = res["error_stats"].std
-        except ZeroDivisionError:
-            std_mrse = 0.0
-
+        c_xx_list.append(res["c_xx"])
+        c_xy_list.append(res["c_xy"])
+        c_yy_list.append(res["c_yy"])
+        std_noise_list.append(std)
         mrse_mean_list.append(mean_mrse)
-        mrse_std_list.append(std_mrse)
 
         logging.info(Fore.WHITE + f"{method} - Mean RSE: {mean_mrse}")
         # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
         stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
         logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
 
-        if __std > 0:
-            logging.info(Fore.WHITE + f"{method} - Noise STD: {__std}")
+        if std > 0:
+            logging.info(Fore.WHITE + f"{method} - Noise STD: {std}")
 
         if method == "VarProDMD":
             comp = res["compression"]
@@ -186,9 +175,10 @@ def run_mrse():
         # "Experiment": case_list,
         "E[t]": exec_time_mean_list,
         "E[MRSE]": mrse_mean_list,
-        "std[MRSE]": mrse_std_list,
         "STD_NOISE": std_noise_list,
-        "STD_RUNTIME": exec_time_std_list,
+        "c_xx": c_xx_list,
+        "c_xy": c_xy_list,
+        "c_yy": c_yy_list,
         # "N_RUNS": N_RUNS,
     }
     loss = OPT_ARGS["loss"]

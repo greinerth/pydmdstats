@@ -6,11 +6,14 @@ import os
 import pickle
 
 import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.patches import Ellipse
 
-logging.basicConfig(level=logging.INFO, filename=__name__)
-# logging.root.setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO)
+logging.root.setLevel(logging.INFO)
 
 
 def visualize_stats():
@@ -40,9 +43,12 @@ def visualize_stats():
         data = pickle.load(handle)
 
         df = pd.DataFrame(data)
-        logging.info(df)
-        # df.rename(columns={"E[t]": r"$E\left[t\right]$ in $s$"})
+        logging.info(f"\n{df}")
+        std_noise = np.array(sorted(set(df["STD_NOISE"])))
+
         if "E[SSIM]" in df.columns:
+            # std_error = df["SSIM_STD"].to_numpy()
+            expected_error = df["E[SSIM]"].to_numpy()
             df.rename(
                 {
                     "E[SSIM]": r"$E\left[\overline{SSIM}\right]$",
@@ -65,6 +71,8 @@ def visualize_stats():
             )
 
         elif "E[MRSE]" in df.columns:
+            # std_error = df["std[MRSE]"].to_numpy()
+            expected_error = df["E[MRSE]"].to_numpy()
             df.rename(
                 {
                     "E[MRSE]": r"$E\left[d\right]$ in $m$",
@@ -88,8 +96,44 @@ def visualize_stats():
 
         else:
             raise ValueError("Unsupported Experiment!")
-
+        axes = g0.axes.reshape((-1,))
+        palette = sns.color_palette(n_colors=2)
+        color = {"VarProDMD": palette[0], "BOPDMD": palette[1]}
+        for ax, std in zip(axes, std_noise):
+            rows = np.where(df[r"$\sigma_{std}$"].to_numpy() == std)[0]
+            rt_expected = df[r"$E\left[t\right]$ in $s$"].to_numpy()[rows]
+            cov_xx = df["c_xx"].to_numpy()[rows]
+            cov_xy = df["c_xy"].to_numpy()[rows]
+            cov_yy = df["c_yy"].to_numpy()[rows]
+            err_expected = expected_error[rows]
+            algorithm = df["Method"].to_numpy()[rows]
+            for err, rt, c_xx, c_xy, c_yy, alg in zip(
+                err_expected, rt_expected, cov_xx, cov_xy, cov_yy, algorithm
+            ):
+                std_x = np.sqrt(c_xx)
+                std_y = np.sqrt(c_yy)
+                pearson = c_xy / (std_x * std_y) if c_xy > 0.0 else 0.0
+                horizontal = np.sqrt(1.0 + pearson)
+                vertical = np.sqrt(1.0 - pearson)
+                ellipse = Ellipse(
+                    (0, 0),
+                    horizontal,
+                    vertical,
+                    edgecolor=color[alg],
+                    facecolor="none",
+                    linestyle="--",
+                )
+                transf = (
+                    transforms.Affine2D()
+                    .rotate_deg(45)
+                    .scale(std_x, std_y)
+                    .translate(err, rt)
+                )
+                ellipse.set_transform(transf + ax.transData)
+                ax.add_patch(ellipse)
+                ax.autoscale()
         g0.add_legend()
+        g0.tight_layout()
         experiment = __args.path.split("/")[-1]
         experiment = experiment.split(".")[0]
         g0.figure.canvas.manager.set_window_title(experiment)

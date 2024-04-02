@@ -17,8 +17,6 @@ import netCDF4 as nc
 import numpy as np
 import wget
 from colorama import Fore
-from pydmd.bopdmd import BOPDMD
-from pydmd.varprodmd import VarProDMD
 
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
@@ -30,8 +28,10 @@ from varprodmdstatspy.util.experiment_utils import (
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 # logging.root.setLevel(logging.INFO)
-OPT_ARGS = {"method": 'trf', "tr_solver": 'exact', "loss": 'linear'}
+OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
+
+# OPT_ARGS = {"method": 'lm', "loss": 'linear'}
 def download(url: str, outdir: str):
     """Download dataset.
     Found on: https://stackoverflow.com/questions/15644964/python-progress-bar-and-downloads
@@ -57,26 +57,20 @@ def test_complex2d_signal(
     ]
 
     data = np.concatenate(data, axis=0)
-
-    if method == "VarProDMD":
-        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
-
-    elif method == "BOPDMD":
-        dmd = BOPDMD()
-
-    else:
-        raise ValueError(f"{method} not implemented")
-
-    time_stats, error_stats = dmd_stats(dmd, data, time, std, n_runs)
-
+    mean_err, mean_dt, c_xx, c_xy, c_yy = dmd_stats(
+        method, data, time, std, OPT_ARGS, eps, n_iter=n_runs
+    )
     return {
-        # "case": "Complex 2D signal",
+        "case": "Complex 2D signal",
         # "omega_size": omega_size,
         "method": method,
-        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "time_stats": time_stats,
+        "mean_err": mean_err,
+        "mean_dt": mean_dt,
+        "c_xx": c_xx,
+        "c_xy": c_xy,
+        "c_yy": c_yy,
         "std": std,
     }
 
@@ -97,25 +91,20 @@ def test_2_moving_points(
         imgs[i] = signal2d(x, y, x_0, y_0, velocity, time[i])
 
     imgs = np.expand_dims(imgs, axis=-1)
-
-    if method == "VarProDMD":
-        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
-
-    elif method == "BOPDMD":
-        dmd = BOPDMD()
-
-    else:
-        raise ValueError(f"{method} not implemented")
-
-    time_stats, error_stats = dmd_stats(dmd, imgs, time, std, n_runs)
+    mean_err, mean_dt, c_xx, c_xy, c_yy = dmd_stats(
+        method, imgs, time, std, OPT_ARGS, eps, n_iter=n_runs
+    )
     return {
         "case": "Moving points",
         # "omega_size": omega_size,
         "method": method,
-        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "time_stats": time_stats,
+        "mean_err": mean_err,
+        "mean_dt": mean_dt,
+        "c_xx": c_xx,
+        "c_xy": c_xy,
+        "c_yy": c_yy,
         "std": std,
     }
 
@@ -143,26 +132,20 @@ def test_global_temp(
     msk = ~(img0 < low)
     msk &= ~(img0 > high)
 
-    # remember invalid numbers from flipped original ime
-    # need to invert once again else not the correct values are remembered
-
-    if method == "VarProDMD":
-        dmd = VarProDMD(compression=eps, optargs=OPT_ARGS)
-
-    elif method == "BOPDMD":
-        dmd = BOPDMD()
-    else:
-        raise ValueError(f"{method} not implemented")
-
-    time_stats, error_stats = dmd_stats_global_temp(dmd, sst, msk, time, std, n_runs)
+    mean_err, mean_dt, c_xx, c_xy, c_yy = dmd_stats_global_temp(
+        method, sst, time, msk, std, OPT_ARGS, eps, n_runs
+    )
     return {
-        # "case": "Global temperature",
+        "case": "Global temperature",
         # "omega_size": omega_size,
         "method": method,
-        "error_stats": error_stats,
         "compression": eps,
         "n_runs": n_runs,
-        "time_stats": time_stats,
+        "mean_err": mean_err,
+        "mean_dt": mean_dt,
+        "c_xx": c_xx,
+        "c_xy": c_xy,
+        "c_yy": c_yy,
         "std": std,
     }
 
@@ -271,47 +254,41 @@ def run_ssim():
     comp_list = []
     method_list = []
     exec_time_mean_list = []
-    exec_time_std_list = []
-    noise_std = []
-    # case_list = []
+    c_xx_list = []
+    c_xy_list = []
+    c_yy_list = []
+    # exec_time_std_list = []
+    std_noise_list = []
     # omega_list = []
     ssim_mean_list = []
-    ssim_std_list = []
 
     for res in starmap(fcts[__args.fct], __args_in):
         # logging.info(Fore.CYAN + res["case"])
+        std = res["std"]
         method = res["method"]
-        # omega_size = res["omega_size"]
-        mean_t = res["time_stats"].mean
-        try:
-            std_t = res["time_stats"].std
-        except ZeroDivisionError:
-            std_t = 0.0
-        __std = res["std"]
+        mean_ssim = res["mean_err"]
+        mean_t = res["mean_dt"]
+        std_t = np.sqrt(res["c_yy"])
         comp_list.append(res["compression"] if res["compression"] > 0 else 0)
         method_list.append(method)
+        ssim_mean_list.append(mean_ssim)
         exec_time_mean_list.append(mean_t)
-        exec_time_std_list.append(std_t)
+        c_xx_list.append(res["c_xx"])
+        c_xy_list.append(res["c_xy"])
+        c_yy_list.append(res["c_yy"])
+        std_noise_list.append(std)
         # case_list.append(res["case"])
         # omega_list.append(omega_size)
-        mean_ssim = res["error_stats"].mean
-        try:
-            std_ssim = res["error_stats"].std
-        except ZeroDivisionError:
-            std_ssim = 0.0
 
-        ssim_mean_list.append(mean_ssim)
-        ssim_std_list.append(std_ssim)
-        noise_std.append(__std)
-
+        std_ssim = np.sqrt(res["c_xx"])
         logging.info(
             Fore.WHITE + f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
         )
         # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
         stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
         logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
-        if __std > 0:
-            logging.info(Fore.WHITE + f"{method} - Noise STD: {__std}")
+        if std > 0:
+            logging.info(Fore.WHITE + f"{method} - Noise STD: {std}")
         if method == "VarProDMD":
             comp = res["compression"]
             if comp > 0:
@@ -325,10 +302,11 @@ def run_ssim():
         # "Experiment": case_list,
         "E[t]": exec_time_mean_list,
         "E[SSIM]": ssim_mean_list,
-        "SSIM_STD": ssim_std_list,
-        "STD_RUNTIME": exec_time_std_list,
-        "STD_NOISE": noise_std,
-        "N_RUNS": N_RUNS,
+        "c_xx": c_xx_list,
+        "c_xy": c_xy_list,
+        "c_yy": c_yy_list,
+        "STD_NOISE": std_noise_list,
+        # "N_RUNS": N_RUNS,
     }
     loss = OPT_ARGS["loss"]
     FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl")

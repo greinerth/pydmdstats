@@ -215,12 +215,14 @@ def _complex2realimgs(imgs: np.ndarray) -> np.ndarray:
 
 
 def dmd_stats(
-    dmd: VarProDMD | BOPDMD,
+    method: str,
     data: np.ndarray,  # pylint: disable=unused-variable
     time: np.ndarray,
     std: float,
+    optargs: dict,
+    compression: float,
     n_iter: int = 100,
-) -> tuple[stats.Stats, stats.Stats]:
+) -> tuple[float]:
     """Wrapper functions for timing purposes
 
     Args:
@@ -233,25 +235,31 @@ def dmd_stats(
     """
 
     # wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
-    timestats = stats.Stats()
-    error_stats = stats.Stats()
+    # timestats = stats.Stats()
+    # error_stats = stats.Stats()
     is_complex = np.iscomplexobj(data)
     is_img = len(data.shape) > 2
     calc_error = True
+    experiment_stats = np.zeros((2, n_iter))
 
-    for _ in range(n_iter):
-        if isinstance(dmd, BOPDMD):
-            dmd._init_alpha = None
-
+    for i in range(n_iter):
         _data = _corrupt_data(data, std)
 
         if is_img:
             _data = _flatten(data)
 
+        if method == "BOPDMD":
+            dmd = BOPDMD(trial_size=_data.shape[-1] - 1)
+        elif method == "VarProDMD":
+            dmd = VarProDMD(compression=compression, optargs=optargs)
+        else:
+            raise ValueError(f"{method} not implemented")
+
         t0 = timeit.default_timer()
         dmd.fit(_data, time)
         dt = timeit.default_timer() - t0
-        timestats.push(dt)
+        # timestats.push(dt)
+        experiment_stats[1, i] = dt
 
         if calc_error:
             pred = dmd.forecast(time)
@@ -265,21 +273,29 @@ def dmd_stats(
                 error = np.linalg.norm(
                     data - (pred if is_complex else pred.real)
                 ) / np.sqrt(data.shape[-1])
-
-            error_stats.push(error)
+            experiment_stats[0, i] = error
+            # error_stats.push(error)
             calc_error = std > 0.0
         # wrapper(data, time, optargs, comp)
-    return timestats, error_stats
+    if std == 0:
+        experiment_stats[0, 1:] = experiment_stats[0, 0]
+    mean = np.mean(experiment_stats, axis=-1)
+    zero_mean = experiment_stats - mean[:, None]
+    cov = (zero_mean @ zero_mean.T) / float(n_iter)
+
+    return mean[0], mean[1], cov[0, 0], cov[0, 1], cov[1, 1]
 
 
 def dmd_stats_global_temp(
-    dmd: VarProDMD | BOPDMD,
+    method: str,
     data: np.ndarray,  # pylint: disable=unused-variable
-    msk_valid: np.ndarray,
     time: np.ndarray,
+    msk_valid: np.ndarray,
     std: float,
+    optargs: dict,
+    compression: float,
     n_iter: int = 100,
-) -> tuple[stats.Stats, stats.Stats]:
+) -> tuple[float]:
     """Wrapper functions for timing purposes
 
     Args:
@@ -292,16 +308,19 @@ def dmd_stats_global_temp(
     """
 
     # wrapper = stats.runtime_stats(False)(varprodmd_wrapper)
-    timestats = stats.Stats()
-    error_stats = stats.Stats()
     calc_error = True
     rows, cols = np.where(~msk_valid)
     msk_flat = np.ravel(msk_valid)
     data[:, rows, cols] = 0.0
+    experiment_stats = np.zeros((2, n_iter))
 
-    for _ in range(n_iter):
-        if isinstance(dmd, BOPDMD):
-            dmd._init_alpha = None
+    for i in range(n_iter):
+        if method == "BOPDMD":
+            dmd = BOPDMD(trial_size=data.shape[0] - 1)
+        elif method == "VarProDMD":
+            dmd = VarProDMD(compression=compression, optargs=optargs)
+        else:
+            raise ValueError(f"{method} not implemented")
 
         _data = _corrupt_data(data, std)
         _data = _flatten(_data)[msk_flat, :]
@@ -309,21 +328,27 @@ def dmd_stats_global_temp(
         t0 = timeit.default_timer()
         dmd.fit(_data, time)
         dt = timeit.default_timer() - t0
-        timestats.push(dt)
+        experiment_stats[1, i] = dt
 
         if calc_error:
             pred = dmd.forecast(time)
             flat_in = np.zeros((msk_flat.shape[-1], pred.shape[-1]))
-            for i in range(pred.shape[-1]):
-                flat_in[msk_flat, i] = pred[:, i].real
+            for j in range(pred.shape[-1]):
+                flat_in[msk_flat, j] = pred[:, j].real
             pred_in = _flat2images(flat_in, data.shape)
             error = ssim_multi_images(
                 np.expand_dims(data, axis=-1), np.expand_dims(pred_in, axis=-1)
             )[0]
-            error_stats.push(error)
+
             calc_error = std > 0.0
-        # wrapper(data, time, optargs, comp)
-    return timestats, error_stats
+            experiment_stats[0, i] = error
+    if std == 0:
+        experiment_stats[0, 1:] = experiment_stats[0, 0]
+
+    mean = np.mean(experiment_stats, axis=-1)
+    zero_mean = experiment_stats - mean[:, None]
+    cov = (zero_mean @ zero_mean.T) / float(n_iter)
+    return mean[0], mean[1], cov[0, 0], cov[0, 1], cov[1, 1]
 
 
 def exec_times_bop_dmd(
