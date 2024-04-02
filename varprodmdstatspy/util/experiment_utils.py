@@ -249,7 +249,7 @@ def dmd_stats(
             _data = _flatten(data)
 
         if method == "BOPDMD":
-            dmd = BOPDMD(trial_size=_data.shape[-1] - 1)
+            dmd = BOPDMD(trial_size=_data.shape[-1])
         elif method == "VarProDMD":
             dmd = VarProDMD(compression=compression, optargs=optargs)
         else:
@@ -316,7 +316,7 @@ def dmd_stats_global_temp(
 
     for i in range(n_iter):
         if method == "BOPDMD":
-            dmd = BOPDMD(trial_size=data.shape[0] - 1)
+            dmd = BOPDMD(trial_size=data.shape[0])
         elif method == "VarProDMD":
             dmd = VarProDMD(compression=compression, optargs=optargs)
         else:

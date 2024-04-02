@@ -47,7 +47,7 @@ if __name__ == "__main__":
     sample_dist = data_in.shape[0] // N_SAMPLES
     varprodmd = VarProDMD(optargs=OPT_ARGS)
     varprodmd.fit(snapshots, time)
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(trial_size=snapshots.shape[-1])
     bopdmd.fit(snapshots, time)
     varprodmd_pred = varprodmd.forecast(time[::sample_dist])
     bopdmd_pred = bopdmd.forecast(time[::sample_dist])
