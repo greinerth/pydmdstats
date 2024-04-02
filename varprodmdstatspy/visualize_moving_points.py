@@ -1,17 +1,18 @@
-""" Visualize the moving points example.
-    Two points in image space moving with different velocities.
+"""Visualize the moving points example.
+Two points in image space moving with different velocities.
 """
+
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pydmd import BOPDMD
-from pydmd import VarProDMD
-from util.experiment_utils import OPT_ARGS, signal2d
+from pydmd import BOPDMD, VarProDMD
+from util.experiment_utils import signal2d
 
-def generate_moving_points(std: float = -1) -> Tuple[np.ndarray,
-                                                     np.ndarray,
-                                                     List[np.ndarray]]:
+
+def generate_moving_points(
+    std: float = -1,
+) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
     """Generate moving points example
 
     Args:
@@ -21,8 +22,8 @@ def generate_moving_points(std: float = -1) -> Tuple[np.ndarray,
     Returns:
        Tuple[np.ndarray, np.ndarray, List[np.ndarray]]: snapshots, timestamps, data
     """
-    fps = 30.
-    total_time = 5.
+    fps = 30.0
+    total_time = 5.0
     velocity = fps / total_time / 4
     x_0 = np.array([-18, -20])
     y_0 = np.array([20, -9])
@@ -39,11 +40,12 @@ def generate_moving_points(std: float = -1) -> Tuple[np.ndarray,
 
 
 if __name__ == "__main__":
+    OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
     N_SAMPLES = 4
     CMAP = "jet"
     STD = 4e-2
-    snapshots, time,  data_in = generate_moving_points(STD)
+    snapshots, time, data_in = generate_moving_points(STD)
     sample_dist = data_in.shape[0] // N_SAMPLES
     varprodmd = VarProDMD(optargs=OPT_ARGS)
     varprodmd.fit(snapshots, time)
@@ -56,7 +58,7 @@ if __name__ == "__main__":
     fig1, ax1 = plt.subplots(3, N_SAMPLES)
     fig2, ax2 = plt.subplots(3, N_SAMPLES)
     # fig1.suptitle('Real Part', fontsize=16)
-    fig2.suptitle('Imaginary Part', fontsize=16)
+    fig2.suptitle("Imaginary Part", fontsize=16)
 
     for i in range(1, N_SAMPLES):
         __varprodmd_img = varprodmd_pred[:, i].reshape(data_in[0].shape)

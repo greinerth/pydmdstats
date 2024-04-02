@@ -1,17 +1,15 @@
-""" Visualize the damped oscillation in image space
-"""
+"""Visualize the damped oscillation in image space"""
+
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pydmd import BOPDMD
-from pydmd import VarProDMD
-from util.experiment_utils import OPT_ARGS
+from pydmd import BOPDMD, VarProDMD
 
 
-def generate_complex2d(std: float = -1) -> Tuple[np.ndarray,
-                                                 np.ndarray,
-                                                 List[np.ndarray]]:
+def generate_complex2d(
+    std: float = -1,
+) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
     """Generate damped oscillating signal
 
     Args:
@@ -26,10 +24,11 @@ def generate_complex2d(std: float = -1) -> Tuple[np.ndarray,
     x_2 = np.linspace(-3, 3, 128)
     x1grid, x2grid = np.meshgrid(x_1, x_2)
 
-    data = [np.expand_dims(2 / np.cosh(x1grid) / np.cosh(x2grid)
-                           * (1.2j**-t), axis=0) for t in timestamps]
-    snapshots_flat = np.zeros(
-        (np.prod(data[0].shape), len(data)), dtype=complex)
+    data = [
+        np.expand_dims(2 / np.cosh(x1grid) / np.cosh(x2grid) * (1.2j**-t), axis=0)
+        for t in timestamps
+    ]
+    snapshots_flat = np.zeros((np.prod(data[0].shape), len(data)), dtype=complex)
     for j, img in enumerate(data):
         __img = img.copy()
         if std > 0:
@@ -40,11 +39,12 @@ def generate_complex2d(std: float = -1) -> Tuple[np.ndarray,
 
 
 if __name__ == "__main__":
+    OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
     N_SAMPLES = 4
     CMAP = "plasma"
     STD = 4e-2
-    snapshots, time,  data_in = generate_complex2d(STD)
+    snapshots, time, data_in = generate_complex2d(STD)
     sample_dist = data_in.shape[0] // N_SAMPLES
     varprodmd = VarProDMD(optargs=OPT_ARGS)
     varprodmd.fit(snapshots, time)
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     fig1, ax1 = plt.subplots(3, N_SAMPLES)
     fig2, ax2 = plt.subplots(3, N_SAMPLES)
-    fig1.suptitle('Real Part', fontsize=16)
-    fig2.suptitle('Imaginary Part', fontsize=16)
+    fig1.suptitle("Real Part", fontsize=16)
+    fig2.suptitle("Imaginary Part", fontsize=16)
 
     for i in range(1, N_SAMPLES):
         __varprodmd_img = varprodmd_pred[:, i].reshape(data_in[0].shape)

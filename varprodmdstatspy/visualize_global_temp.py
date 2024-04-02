@@ -1,5 +1,5 @@
-"""Visualize the global temperature in image space
-"""
+"""Visualize the global temperature in image space"""
+
 import inspect
 import os
 from typing import List, Tuple
@@ -7,15 +7,15 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
-from pydmd import BOPDMD
-from pydmd import VarProDMD
-from util.experiment_utils import OPT_ARGS
+from pydmd import BOPDMD, VarProDMD
+
+# from util.experiment_utils import OPT_ARGS
 from varprodmd_ssim_performance import download
 
 
-def generate_global_temp(std: float = -1) -> Tuple[np.ndarray,
-                                                   np.ndarray,
-                                                   List[np.ndarray]]:
+def generate_global_temp(
+    std: float = -1,
+) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
     """Read Sea Surface Temperature and augment with noise.
 
     Args:
@@ -27,14 +27,17 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray,
     """
     DATASET = "sst.day.mean.ltm.1982-2010.nc"
     YEARS = 2010 - 1982
-    currentdir = os.path.dirname(os.path.abspath(
-        inspect.getfile(inspect.currentframe())))
+    currentdir = os.path.dirname(
+        os.path.abspath(inspect.getfile(inspect.currentframe()))
+    )
     FILE = os.path.join(currentdir, "data")
 
     if not os.path.exists(FILE):
         os.makedirs(FILE)
-        download("https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-                os.path.join(FILE, DATASET))
+        download(
+            "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
+            os.path.join(FILE, DATASET),
+        )
 
     FILE = os.path.join(FILE, DATASET)
     dataset = nc.Dataset(FILE)
@@ -42,10 +45,11 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray,
 
     low, high = dataset["sst"].valid_range
     n_samples = float(sst.shape[0])
-    delta_t = YEARS / float(n_samples)
     sst = sst[-128:]
 
-    timestamps = np.arange(sst.shape[0]) * delta_t
+    dt = (float(YEARS) / float(n_samples)) * sst.shape[0]
+
+    timestamps = np.linspace(0, dt, sst.shape[0])
     img0 = sst[0]
     # img0 = img0[::-1, ::]
     msk = ~(img0 < low)
@@ -54,25 +58,26 @@ def generate_global_temp(std: float = -1) -> Tuple[np.ndarray,
     # remember invalid numbers from flipped original image
     # need to invert once again else not the correct values are remembered
     rows, cols = np.where(~msk)
-    sst[..., rows, cols] = 0.
+    sst[..., rows, cols] = 0.0
     __msk_flat = np.ravel(msk)
     __flat = np.zeros(shape=(np.sum(msk), sst.shape[0]))
     for j in range(sst.shape[0]):
         __img = sst[j]
         __noisy = __img.copy()
         if std > 0:
-            __noisy += np.random.normal(0., std, size=__img.shape)
+            __noisy += np.random.normal(0.0, std, size=__img.shape)
         __flat[:, j] = np.ravel(__noisy)[__msk_flat]
     __flat = __flat.astype(np.complex128)
     return __flat, timestamps, sst, __msk_flat
 
 
 if __name__ == "__main__":
+    OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
     N_SAMPLES = 3
     CMAP = "jet"
-    STD = 4e-2
-    snapshots, time,  data_in, msk_flat = generate_global_temp(STD)
+    STD = 0.01
+    snapshots, time, data_in, msk_flat = generate_global_temp(STD)
     sample_dist = data_in.shape[0] // N_SAMPLES
     varprodmd = VarProDMD(optargs=OPT_ARGS, exact=False)
     varprodmd.fit(snapshots, time)
@@ -86,11 +91,17 @@ if __name__ == "__main__":
     fig1, ax1 = plt.subplots(3, N_SAMPLES)
     fig2, ax2 = plt.subplots(3, N_SAMPLES)
     # fig1.suptitle('Real Part', fontsize=16)
-    fig2.suptitle('Imaginary Part', fontsize=16)
+    fig2.suptitle("Imaginary Part", fontsize=16)
 
     for i in range(1, N_SAMPLES):
-        __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:], )),
-                                         dtype=varprodmd_pred.dtype)
+        __varprodmd_img_flat = np.zeros(
+            (
+                np.prod(
+                    data_in.shape[1:],
+                )
+            ),
+            dtype=varprodmd_pred.dtype,
+        )
         __varprodmd_img_flat[msk_flat] = varprodmd_pred[:, i]
         __bopdmd_img_flat = np.zeros_like(__varprodmd_img_flat)
         __bopdmd_img_flat[msk_flat] = bopdmd_pred[:, i]
@@ -134,8 +145,9 @@ if __name__ == "__main__":
         ax2[1][i].set_yticks([])
         ax2[2][i].set_yticks([])
 
-    __varprodmd_img_flat = np.zeros((np.prod(data_in.shape[1:]), ),
-                                    dtype=varprodmd_pred.dtype)
+    __varprodmd_img_flat = np.zeros(
+        (np.prod(data_in.shape[1:]),), dtype=varprodmd_pred.dtype
+    )
     __varprodmd_img_flat[msk_flat] = varprodmd_pred[:, 0]
     __bopdmd_img_flat = np.zeros_like(__varprodmd_img_flat)
     __bopdmd_img_flat[msk_flat] = bopdmd_pred[:, 0]
