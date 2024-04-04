@@ -67,7 +67,7 @@ def visualize_stats():
                 size="$c_{comp}$",
                 legend="full",
                 hue="Method",
-                alpha=0.5,
+                alpha=0.5
             )
 
         elif "E[MRSE]" in df.columns:
@@ -83,7 +83,7 @@ def visualize_stats():
                 axis="columns",
                 inplace=True,
             )
-            g0 = sns.FacetGrid(df, col="$\\sigma_{std}$")
+            g0 = sns.FacetGrid(df, col=r"$\sigma_{std}$")
             g0.map_dataframe(
                 sns.scatterplot,
                 r"$E\left[d\right]$ in $m$",
@@ -91,7 +91,7 @@ def visualize_stats():
                 size="$c_{comp}$",
                 legend="full",
                 hue="Method",
-                alpha=0.5,
+                alpha=0.5
             )
 
         else:
@@ -122,6 +122,7 @@ def visualize_stats():
                     edgecolor=color[alg],
                     facecolor="none",
                     linestyle="--",
+                    alpha=0.5
                 )
                 transf = (
                     transforms.Affine2D()
@@ -132,6 +133,7 @@ def visualize_stats():
                 ellipse.set_transform(transf + ax.transData)
                 ax.add_patch(ellipse)
                 ax.autoscale()
+                # ax.axis('equal')
         g0.add_legend()
         g0.tight_layout()
         experiment = __args.path.split("/")[-1]

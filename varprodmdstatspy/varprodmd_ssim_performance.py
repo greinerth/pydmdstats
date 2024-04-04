@@ -123,7 +123,7 @@ def test_global_temp(
     sst = ds["sst"][:]
     low, high = ds["sst"].valid_range
     n_samples = float(sst.shape[0])
-    sst = sst[-128:]
+    sst = sst[-64:]
     dt = (float(YEARS) / float(n_samples)) * sst.shape[0]
 
     time = np.linspace(0, dt, sst.shape[0])
@@ -178,7 +178,7 @@ def run_ssim():
         type=comp_checker,
         default=COMPS,
         dest="compression",
-        help=f"Compression for VarProDMD. [Defaults: {COMPS}]",
+        help=f"Compression for VarProDMD. [Default: {COMPS}]",
     )
     parser.add_argument(
         "-s",
@@ -188,7 +188,7 @@ def run_ssim():
         nargs="+",
         dest="std",
         default=STD,
-        help=f"Standard Deviation for noise. [Defaults: {STD}]",
+        help=f"Standard Deviation for noise. [Default: {STD}]",
     )
     parser.add_argument(
         "-o",
@@ -196,7 +196,7 @@ def run_ssim():
         type=str,
         default=OUTDIR,
         dest="out",
-        help=f"Output Directory. [Defaults: {OUTDIR}]",
+        help=f"Output Directory. [Default: {OUTDIR}]",
     )
     parser.add_argument(
         "-r",
@@ -204,7 +204,7 @@ def run_ssim():
         type=int,
         default=N_RUNS,
         dest="runs",
-        help=f"Number of runs per configuration [Defaults: {N_RUNS}]",
+        help=f"Number of runs per configuration [Default: {N_RUNS}]",
     )
     parser.add_argument(
         "-f",
@@ -214,7 +214,14 @@ def run_ssim():
         type=str,
         help=f"Function to run: Available functions: {FCTS}",
     )
-
+    parser.add_argument(
+        "-l",
+        "--loss",
+        dest="loss",
+        default="linear",
+        type=str,
+        help="Loss for optimization, [Default: linear]",
+    )
     __args = parser.parse_args()
 
     if __args.fct not in fcts:
@@ -235,6 +242,7 @@ def run_ssim():
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
+    OPT_ARGS["loss"] = __args.loss
 
     logging.info("Solver parameters")
     logging.info("=================")

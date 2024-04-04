@@ -103,7 +103,14 @@ def run_mrse():
         dest="runs",
         help=f"Number of runs per configuration [Defaults: {N_RUNS}]",
     )
-
+    parser.add_argument(
+        "-l",
+        "--loss",
+        dest="loss",
+        default="linear",
+        type=str,
+        help="Loss for optimization, [Default: linear]",
+    )
     __args = parser.parse_args()
     # manager = mp.Manager()
     # results = manager.list()
@@ -114,9 +121,11 @@ def run_mrse():
     N_RUNS = abs(__args.runs)
     STD = __args.std
     COMPS = __args.compression
-
+    OPT_ARGS["loss"] = __args.loss
     logging.info("Solver parameters")
     logging.info("=================")
+    for kw in OPT_ARGS:
+        logging.info(f"{kw}: {OPT_ARGS[kw]}")
     logging.info("\nStarting simulation...")
 
     args_in = []
