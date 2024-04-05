@@ -172,13 +172,14 @@ def run_ssim():
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
 
     parser.add_argument(
+        "-c",
         "--compression",
         metavar="N",
         nargs="+",
         type=comp_checker,
         default=COMPS,
         dest="compression",
-        help=f"Compression for VarProDMD. [Default: {COMPS}]",
+        help=f"Compression for VarProDMD. [Defaults: {COMPS}]",
     )
     parser.add_argument(
         "-s",
@@ -188,7 +189,7 @@ def run_ssim():
         nargs="+",
         dest="std",
         default=STD,
-        help=f"Standard Deviation for noise. [Default: {STD}]",
+        help=f"Standard Deviation for noise. [Defaults: {STD}]",
     )
     parser.add_argument(
         "-o",
@@ -196,7 +197,7 @@ def run_ssim():
         type=str,
         default=OUTDIR,
         dest="out",
-        help=f"Output Directory. [Default: {OUTDIR}]",
+        help=f"Output Directory. [Defaults: {OUTDIR}]",
     )
     parser.add_argument(
         "-r",
@@ -204,7 +205,29 @@ def run_ssim():
         type=int,
         default=N_RUNS,
         dest="runs",
-        help=f"Number of runs per configuration [Default: {N_RUNS}]",
+        help=f"Number of runs per configuration [Defaults: {N_RUNS}]",
+    )
+    parser.add_argument(
+        "-l",
+        "--loss",
+        dest="loss",
+        default="linear",
+        type=str,
+        help='Loss for optimization. Only useful if opt is not set to"lm" [Default: linear]',
+    )
+    parser.add_argument(
+        "--opt",
+        dest="opt",
+        default="trf",
+        type=str,
+        help="Optimizer, [Default: trf - Trust Region Function]",
+    )
+    parser.add_argument(
+        "--scale_jac",
+        action="store_true",
+        default=False,
+        dest="scale_jac",
+        help="Scale the search directions with inverse jacobian, [Defaulf: False]",
     )
     parser.add_argument(
         "-f",
@@ -214,18 +237,23 @@ def run_ssim():
         type=str,
         help=f"Function to run: Available functions: {FCTS}",
     )
-    parser.add_argument(
-        "-l",
-        "--loss",
-        dest="loss",
-        default="linear",
-        type=str,
-        help="Loss for optimization, [Default: linear]",
-    )
     __args = parser.parse_args()
 
     if __args.fct not in fcts:
         raise KeyError("f{__args.fct} not implemented!")
+    # manager = mp.Manager()
+    # results = manager.list()
+    if __args.scale_jac:
+        OPT_ARGS["x_scale"] = "jac"
+
+    if __args.opt == "lm":
+        OPT_ARGS["method"] = "lm"
+        OPT_ARGS["loss"] = "linear"
+        OPT_ARGS.pop("tr_solver", None)
+
+    if __args.fct not in fcts:
+        raise KeyError("f{__args.fct} not implemented!")
+
     PATH2DATASET = os.path.join(currentdir, "data")
 
     if __args.fct == "global_temp" and not os.path.exists(PATH2DATASET):
@@ -235,9 +263,6 @@ def run_ssim():
             "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
             os.path.join(PATH2DATASET, "sst.day.mean.ltm.1982-2010.nc"),
         )
-
-    if not os.path.exists(__args.out):
-        os.makedirs(__args.out)
 
     N_RUNS = abs(__args.runs)
     STD = __args.std
@@ -316,10 +341,23 @@ def run_ssim():
         "STD_NOISE": std_noise_list,
         # "N_RUNS": N_RUNS,
     }
+
     loss = OPT_ARGS["loss"]
-    FILE_OUT = os.path.join(__args.out, f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl")
+    opt = OPT_ARGS["method"]
+    out_path = os.path.join(__args.out, opt)
+
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    if "x_scale" not in OPT_ARGS:
+        FILE_OUT = os.path.join(out_path, f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl")
+    else:
+        FILE_OUT = os.path.join(
+            out_path, f"SSIM_{__args.fct}_{N_RUNS}_{loss}_inv_jac_scale.pkl"
+        )
 
     logging.info(f"Storing results to {FILE_OUT}")
+
     with open(FILE_OUT, "wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

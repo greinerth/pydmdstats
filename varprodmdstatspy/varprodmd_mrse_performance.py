@@ -69,6 +69,7 @@ def run_mrse():
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
 
     parser.add_argument(
+        "-c",
         "--compression",
         metavar="N",
         nargs="+",
@@ -109,14 +110,32 @@ def run_mrse():
         dest="loss",
         default="linear",
         type=str,
-        help="Loss for optimization, [Default: linear]",
+        help='Loss for optimization. Only useful if opt is not set to"lm" [Default: linear]',
+    )
+    parser.add_argument(
+        "--opt",
+        dest="opt",
+        default="trf",
+        type=str,
+        help="Optimizer, [Default: trf - Trust Region Function]",
+    )
+    parser.add_argument(
+        "--scale_jac",
+        action="store_true",
+        default=False,
+        dest="scale_jac",
+        help="Scale the search directions with inverse jacobian, [Defaulf: False]",
     )
     __args = parser.parse_args()
     # manager = mp.Manager()
     # results = manager.list()
+    if __args.scale_jac:
+        OPT_ARGS["x_scale"] = "jac"
 
-    if not os.path.exists(__args.out):
-        os.makedirs(__args.out)
+    if __args.opt == "lm":
+        OPT_ARGS["method"] = "lm"
+        OPT_ARGS["loss"] = "linear"
+        OPT_ARGS.pop("tr_solver", None)
 
     N_RUNS = abs(__args.runs)
     STD = __args.std
@@ -191,8 +210,21 @@ def run_mrse():
         # "N_RUNS": N_RUNS,
     }
     loss = OPT_ARGS["loss"]
-    FILE_OUT = os.path.join(__args.out, f"MRSE_highdim_{N_RUNS}_{loss}.pkl")
+    opt = OPT_ARGS["method"]
+    out_path = os.path.join(__args.out, opt)
+
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    if "x_scale" not in OPT_ARGS:
+        FILE_OUT = os.path.join(out_path, f"MRSE_highdim_{N_RUNS}_{loss}.pkl")
+    else:
+        FILE_OUT = os.path.join(
+            out_path, f"MRSE_highdim_{N_RUNS}_{loss}_inv_jac_scale.pkl"
+        )
+
     logging.info(f"Storing results to {FILE_OUT}")
+
     with open(FILE_OUT, "wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
