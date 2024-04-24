@@ -7,7 +7,6 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Ellipse
