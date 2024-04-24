@@ -14,8 +14,7 @@ To visualize the results some prerequisites are necessary.\
 First, download this repository and execute the following commands 
 ```
 cd /path/to/repository
-python3.11 -m pip install --user -e .
-python3.11 -m pip install --user -e git+https://github.com/greinerth/PyDMD.git@feature/varpro#egg=pydmd
+python3.11 -m pip --user install -e .
 ```
 For proper visualization of the results make sure LaTex is installed.\
 For a minimal installation open another command line window and execute
@@ -46,19 +45,20 @@ For detailed information type
 ```
 run_ssim -h
 ```
-Not that some of the experiments require a lot of time (especially the sea surface temperature experiment (global_temp)).\
-The experiments also artificially corrupt the original signal with noise. Further, different compression rates (library selection) are considered.\
+You may also modify the optimizer within the experiments. Within your specified path a subfolder with the name of the optimizer used for the experiment is created.
+Note that some of the experiments require a lot of time.\
+The experiments also artificially corrupt the original signal with noise. Further, different compression rates (library selection) are considered.
 The results are stored in a .pkl file.
 
 ### Visualize Results
 After the experiments were run you can easily visualize the runtime statistics.\
 Here is an example of how to visualize the sea surface temperature experiment
 ```
-visualize_stats -p output/SSIM_global_temp.pkl
+visualize_stats -p output/lm/MRSE_highdim_100_linear.pkl
 ```
 ## Library Selection Scheme
 Here is a visualization of how the QR decomposition with Column Pivoting (greedily) selects samples of a spatiotemporal signal\
-in the original (high-dimensional) space. The spatiotemporal signal is also utilized in the experiments (cf. section **Spatiotemporal Dynamics**).
+in the original (highdimensional) space. The spatiotemporal signal is also utilized in the experiments (cf. section **Spatiotemporal Dyamics**).
 
 Within the experiments, the library selection in general is performed in the *projected*\
 low dimensional space:
@@ -78,16 +78,11 @@ The compression is set to $c = 0.8$, hence $20$ samples are utilized for the opt
 |*Spatiotemporal signal: Reconstructed real- and imaginary parts of the signal. The reconstruction is performed with VarProDMD*|
 
 ## Results
-All experiments consider different compressions and varying noise corruption.\
+All experiments consider different compressions and varying (zero-mean Gaussian) noise corruption with standard deviation $\sigma_{std} \in \{0.0001, 0.001, 0.01\}$.\
+Each experiment is executed 100 times. The optimization is performed in the projected (low-dimensional) space.
 The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).\
-Depending on the experiment either the mean/expected mean root squared error ($E\left[d\right]$) or the mean/expected Structural Similarity Index ($E\left[\overline{SSIM}\right]$) is computed.\
-For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[\overline{SSIM}\right]$ a value close to 1 is desired, while also having a low expected runtime. $\overline{SSIM}$ denotes a weighted\
-structural similarity, since a measurement/image might consist of complex numbers. In this case the measurement or image is treated as image with $2$ channels. Then, the Structural Similarity Index is calculated as weighted sum s.t.
-
-```math
-\overline{SSIM} = \frac{1}{2}SSIM\left(\hat{\boldsymbol{X}}_1, \boldsymbol{X}_1\right) + \frac{1}{2}SSIM\left(\hat{\boldsymbol{X}}_2, \boldsymbol{X}_2\right)
-```
-Here, $\boldsymbol{X}_i$ represents the original image, $\hat{\boldsymbol{X}}_i$ denotes the reconstructed image on the i-th channel respectively.
+Depending on the experiment either the mean/expected mean root squared error ($E\left[d\right]$) or the mean/expected Structural Similarity Index ($E\left[SSIM\right]$) is computed.\
+For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[SSIM\right]$ a value close to 1 is desired, while also having a low expected runtime.
 
 ### Spatiotemporal Dynamics
 The formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
@@ -96,26 +91,27 @@ f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \
 ```
 |![spatiotemporal_stats](./figures/highdim_stats.png)|
 |:-:|
-|*Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD.*|
+|*Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD. Dashed ellipse indicate error- and time covariance. A dashed line is a collapsed ellipse. In this case only the execution times vary. VarProDMD uses Trust Region Optimization (TRF) during the experiment.*|
 
-### Damped Oscillations
-The damped oscillation experiment (taken from [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)) consists of $64$ *complex* $128 \times 128 px$ images.\
-The formula for generating the time dependent complex images:
+### Oscillations
+The oscillation experiment (taken from [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)) consists of $64$ *complex* $128 \times 128 px$ images.\
+Formula for generating the time dependend complex images:
+
 ```math
 f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^{-t}
 ```
 
-|![damped_oscillations_real](./figures/complex2d_real.png)|
+|![oscillations_real](./figures/complex2d_real.png)|
 |:-:|
-|*Damped Oscillations: The top row denotes the original real (noisy) signal. The bottom rows are the reconstructions of the different approaches.*|
+|*Oscillations: The top row denotes the original real (noisy) signal. The bottom rows are the reconstructions of the different approaches.*|
 
-|![damped_oscillations_real](./figures/complex2d_imag.png)|
+|![oscillations_real](./figures/complex2d_imag.png)|
 |:-:|
-|*Damped Oscillations: The top row denotes the original imaginary signal. The bottom rows are the reconstructions of the different approaches.*|
+|*Oscillations: The top row denotes the original imaginary signal. The bottom rows are the reconstructions of the different approaches.*|
 
-|![damped_oscillations_stats](./figures/complex2d_stats.png)|
+|![oscillations_stats](./figures/complex2d_stats.png)|
 |:-:|
-|*Damped Oscillations experiment: Expected runtime for BOPDMD and VarProDMD.*|
+|*Oscillations experiment: Expected runtime for BOPDMD and VarProDMD. VarProDMD uses Levenberg-Marquardt (LM) optimization within the experiment. The noise mainly influences the runtime (indicated by the dashed lines).*|
 
 ### Moving Points
 The moving point experiments consider $128$ samples and consist of $128 \times 128 px$ images.\
@@ -129,16 +125,5 @@ f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i =
 
 |![moving_points_stats](./figures/moving_points_stats.png)|
 |:-:|
-|*Moving Points: Expected runtime for BOPDMD and VarProDMD. Compression accelerates the optimization.*|
+|*Moving Points: Expected runtime for BOPDMD and VarProDMD. Compression accelerates the optimization. BOPDMD however yields superior performance. VarProDMD uses LM optimization with Jacobian scaling during the experiment.*|
 
-### Sea Surface Temperature
-The sea surface temperature experiment considers the last $128$ measurements of the [sst dataset](https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc).
-Each recording consists of $720 \times 1440 px$.
-
-|![sst_rec](./figures/global_temp.png)|
-|:-:|
-|*Global sea surface temperature: The optimization is performed on the last 128 samples of the dataset. Three preselected samples/reconstructions are shown. The top row shows the original (noisy) signal, the bottom rows are the reconstructions of the different approaches.*|
-
-|![sst_stats](./figures/global_temp_stats.png)|
-|:-:|
-|*Global sea surface temperature: Expected runtime for BOPDMD and VarProDMD.*|

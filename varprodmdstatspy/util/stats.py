@@ -1,11 +1,71 @@
-"""Runtime statistics for execution times
-"""
+"""Runtime statistics for execution times"""
+
 # import timeit
 import timeit
 from typing import Any, Callable
 
+import numpy as np
 
-class ExecutionStats:
+
+class Stats:
+    """Calculate running mean and variance."""
+
+    __slots__ = ["_mean", "_var_hat", "_cnt"]
+
+    def __init__(self) -> None:
+        self._mean: float = 0.0
+        self._var_hat: float = 0.0
+        self._cnt: int = 1
+
+    def push(self, val: float) -> None:
+        """Add new value to calculate statistics
+
+        :param val: New value for running mean/variance calculation.
+        :type val: float
+        """
+        delta = val - self._mean
+        self._mean += delta / float(self._cnt)
+        self._var_hat += (val - self._mean) * delta
+        self._cnt += 1
+
+    def reset(self) -> None:
+        """Reset all values."""
+        self._mean: float = 0.0
+        self._var_hat: float = 0.0
+        self._cnt: int = 1
+
+    @property
+    def mean(self) -> float:
+        """Get calculated mean.
+
+        :return: mean value.
+        :rtype: float
+        """
+        return self._mean
+
+    @property
+    def var(self) -> float:
+        """Get sample variance.
+
+        :raises ZeroDivisionError: If no values were added for variance calculation.
+        :return: Sample variance
+        :rtype: float
+        """
+        if self._cnt == 1:
+            raise ZeroDivisionError("Need more samples!")
+        return self._var_hat / float(self._cnt - 1)
+
+    @property
+    def std(self) -> float:
+        """Get sample standard deviation.
+
+        :return: Sample standard deviation.
+        :rtype: float
+        """
+        return np.sqrt(self.var)
+
+
+class ExecutionStats(Stats):
     """Measure the execution time of a function/method
 
     Raises:
@@ -13,64 +73,29 @@ class ExecutionStats:
                            variance calulation
 
     """
-    __slots__ = ['__func',
-                 '__mean_time',
-                 '__var_time_hat',
-                 '__counter',
-                 '__verbose',
-                 '__min',
-                 '__max']
+
+    __slots__ = ["_func", "_verbose", "_min", "_max"]
 
     def __init__(self, function: Callable, verbose: bool = True) -> None:
-        self.__func = function
-        self.__mean_time: float = 0.
-        self.__var_time_hat: float = 0.
-        self.__counter: int = 1
-        self.__verbose: bool = verbose
-        self.__min: float = float('inf')
-        self.__max: float = 0.
+        super().__init__()
+        self._func = function
+        self._verbose: bool = verbose
+        self._min: float = float("inf")
+        self._max: float = 0.0
 
     def __call__(self, *args: Any, **kwds: Any) -> Any:
-        __prev_mean_time = self.__mean_time
         t_1 = timeit.default_timer()
-        res = self.__func(*args, **kwds)
+        res = self._func(*args, **kwds)
         delta_t = timeit.default_timer() - t_1
-        delta = delta_t - __prev_mean_time
-        self.__mean_time = __prev_mean_time + \
-            delta / float(self.__counter)
-        self.__var_time_hat += (delta_t - self.__mean_time) * delta
-        self.__counter += 1
+        self.push(delta_t)
 
-        if delta_t < self.__min:
-            self.__min = delta_t
+        if delta_t < self._min:
+            self._min = delta_t
 
-        if delta_t > self.__max:
-            self.__max = delta_t
+        if delta_t > self._max:
+            self._max = delta_t
 
         return res
-
-    @property
-    def mean(self) -> float:
-        """Get the mean execution time
-
-        Returns:
-            float: Execution time of several runs.
-        """
-        return self.__mean_time
-
-    @property
-    def var(self) -> float:
-        """Get the variance of the execution time.
-
-        Raises:
-            ZeroDivisionError: If only one measurement was taken.
-
-        Returns:
-            float: Calculated variance.
-        """
-        if self.__counter == 1:
-            raise ZeroDivisionError("Need more samples!")
-        return self.__var_time_hat / float(self.__counter - 1)
 
     @property
     def min(self) -> float:
@@ -91,19 +116,16 @@ class ExecutionStats:
         return self.__max
 
     def reset(self):
-        """ reset the stats
-        """
-        self.__mean_time = 0.
-        self.__var_time_hat = 0.
-        self.__min = float('inf')
-        self.__max = 0.
-        self.__counter = 1
+        """reset the stats"""
+        super().reset()
+        self.__min = float("inf")
+        self.__max = 0.0
 
     def __del__(self):
-        if self.__verbose:
-            __stats = f"\n{self.__func.__name__ } stats:\n"
+        if self._verbose:
+            __stats = f"\n{self._func.__name__ } stats:\n"
             __stats += f"Mean execution time: {self.mean} [s]\n"
-            if self.__counter > 1:
+            if self._cnt > 1:
                 __stats += f"Var execution time: {self.var} [s]\n"
             print(__stats)
 
@@ -117,6 +139,7 @@ def runtime_stats(verbose: bool = True) -> Callable:  # pylint: disable=unused-v
     Returns:
         ExecutionStats: ExecutionStats object
     """
+
     def decorator(func: Callable):
         return ExecutionStats(func, verbose)
 
