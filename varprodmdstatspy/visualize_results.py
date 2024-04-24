@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 import pickle
-
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 import numpy as np
@@ -59,6 +59,7 @@ def visualize_stats():
                 axis="columns",
                 inplace=True,
             )
+
             g0 = sns.FacetGrid(df, col=r"$\sigma_{std}$")
             g0.map_dataframe(
                 sns.scatterplot,
@@ -96,6 +97,7 @@ def visualize_stats():
 
         else:
             raise ValueError("Unsupported Experiment!")
+
         axes = g0.axes.reshape((-1,))
         palette = sns.color_palette(n_colors=2)
         color = {"VarProDMD": palette[0], "BOPDMD": palette[1]}

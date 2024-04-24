@@ -7,7 +7,8 @@ if only *one* model is considered. The preselection $\widetilde{\boldsymbol{X}} 
 Note that in Python the execution times vary, due to system calls or waiting for resources.
 
 ## Setup
-The easiest way to run the scripts is to use [VSCode's devcontainer capability](https://code.visualstudio.com/docs/devcontainers/containers). The project was tested on Ubuntu 22.04 (which also served as a host system for the devcontainers) with the Python3.11 interpreter. For visualization of the results 
+The easiest way to run the scripts is to use [VSCode's devcontainer capability](https://code.visualstudio.com/docs/devcontainers/containers). The project was tested on Ubuntu 22.04 (which also served as a host system for the devcontainers) with the Python3.11 interpreter.
+
 ### Ubuntu 22.04
 To visualize the results some prerequisites are necessary.\
 First, download this repository and execute the following commands 
@@ -59,13 +60,14 @@ visualize_stats -p output/lm/MRSE_highdim_100_linear.pkl
 Here is a visualization of how the QR decomposition with Column Pivoting (greedily) selects samples of a spatiotemporal signal\
 in the original (highdimensional) space. The spatiotemporal signal is also utilized in the experiments (cf. section **Spatiotemporal Dyamics**).
 
-Within the experiments the library selection in general is performed in the *projected*\
+Within the experiments, the library selection in general is performed in the *projected*\
 low dimensional space:
 ```math
 \hat{\boldsymbol{X}} = \boldsymbol{U}^*\boldsymbol{X} = \boldsymbol{\Sigma V}^*
 ```
-The formula on how to generate the spatiotemporal dynamics is described in section **Spatiotemporal Dyamics**.\
-The signal consists of $100$ measurements with $1024$ entries $\left(\boldsymbol{X} \in \mathbb{C}^{1024 \times 100}\right)$. The compression is set to $80\%$ ($c = 0.8$), hence $20$ samples are utilized for the optimization.
+The formula on how to generate the spatiotemporal dynamics is described in section **Spatiotemporal Dynamics**.\
+The signal consists of $100$ measurements with $1024$ entries $\left(\boldsymbol{X} \in \mathbb{C}^{1024 \times 100}\right)$.\
+The compression is set to $c = 0.8$, hence $20$ samples are utilized for the optimization.
 
 |![lib_select](./figures/varprodmd_highdim_library.png)|
 |:--:|
@@ -81,8 +83,9 @@ Each experiment is executed 100 times. The optimization is performed in the proj
 The parameters used for the experiments are the default values of the different scripts (`run_mrse, run_ssim`).\
 Depending on the experiment either the mean/expected mean root squared error ($E\left[d\right]$) or the mean/expected Structural Similarity Index ($E\left[SSIM\right]$) is computed.\
 For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[SSIM\right]$ a value close to 1 is desired, while also having a low expected runtime.
+
 ### Spatiotemporal Dynamics
-Formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
+The formula for generating the spatiotemporal dynamics (taken from [here](https://epubs.siam.org/doi/book/10.1137/1.9781611974508)):
 ```math
 f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \frac{2}{\cosh\left(x\right)}\tanh\left(x\right)\exp\left(j2.8t\right)
 ```
@@ -93,6 +96,7 @@ f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \
 ### Oscillations
 The oscillation experiment (taken from [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)) consists of $64$ *complex* $128 \times 128 px$ images.\
 Formula for generating the time dependend complex images:
+
 ```math
 f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^{-t}
 ```

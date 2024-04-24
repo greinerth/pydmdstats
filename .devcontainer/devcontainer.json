@@ -26,8 +26,9 @@
 	],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
+
 	"postCreateCommand": "pip3 install --user -e .[dev] && sudo apt update && sudo apt upgrade -y && sudo apt install texlive-xetex cm-super dvipng -y",
-	// &&  pip3 install --user -e git+https://github.com/greinerth/PyDMD.git@feature/varpro#egg=pydmd && sudo apt update && sudo apt upgrade -y ,
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
