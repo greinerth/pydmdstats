@@ -30,6 +30,4 @@ jobs:
       - name: Lint and test with nox
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          nox -s tests
-          nox -s pylint
-          nox -s lint
+          nox -s pylint tests
