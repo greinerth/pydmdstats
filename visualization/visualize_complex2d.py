@@ -14,12 +14,10 @@ def generate_complex2d(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate damped oscillating signal
 
-    Args:
-        std (float, optional): Standard deviatopm for noise.
-                               If <= 0 no noise is added. Defaults to -1.
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray]: snapshots, timestamps, data
+    :param std: Standard deviation for data corruption, defaults to -1
+    :type std: float, optional
+    :return: snapshots, timestamps, data
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
     timestamps = np.linspace(0, 6, 16)
     x_1 = np.linspace(-3, 3, 128)
