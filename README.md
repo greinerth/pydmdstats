@@ -1,7 +1,7 @@
 # pydmdstats
 
 [Askham et al.](https://epubs.siam.org/doi/abs/10.1137/M1124176) introduced the
-variable projection for the Dynamic Mode Decomposition (DMD).\
+variable projection for Dynamic Mode Decomposition (DMD).\
 This repository compares two implementations of the variable projection method for
 DMD ([BOPDMD](https://github.com/PyDMD/PyDMD/blob/master/pydmd/bopdmd.py) originally
 introduced by [Sashidar and Kutz](https://royalsocietypublishing.org/doi/abs/10.1098/rsta.2021.0199),
@@ -22,7 +22,7 @@ resources.
 The easiest way to run the scripts is to use
 [VSCode's devcontainer capability](https://code.visualstudio.com/docs/devcontainers/containers).
 The project was tested on Ubuntu 22.04 (which also served as a host system for
-the devcontainers) with the Python3.11 interpreter.
+the dev containers) with the Python3.11 and Python3.12 interpreters.
 
 ### Ubuntu 22.04
 
@@ -31,7 +31,7 @@ First, download this repository and execute the following commands
 
 ```
 cd /path/to/repository
-python3.11 -m pip --user install -e .
+pip --user install -e .
 ```
 
 For proper visualization of the results make sure LaTex is installed.\
@@ -96,8 +96,8 @@ visualize_stats -p output/lm/MRSE_highdim_100_linear.pkl
 
 Here is a visualization of how the QR decomposition with Column Pivoting
 (greedily) selects samples of a spatiotemporal signal\
-in the original (highdimensional) space. The spatiotemporal signal is also utilized
-in the experiments (cf. section **Spatiotemporal Dyamics**).
+in the original (high-dimensional) space. The spatiotemporal signal is also utilized
+in the experiments (cf. section **Spatiotemporal Dynamics**).
 
 Within the experiments, the library selection in general is performed in the
 _projected_\
@@ -124,7 +124,7 @@ optimization.
 ## Results
 
 All experiments consider different compressions and varying (zero-mean Gaussian)
-noise corruption with standard deviation
+noise corruption with a standard deviation
 $\sigma_{std} \in \{0.0001, 0.001, 0.01\}$.\
 Each experiment is executed 100 times. The optimization is performed in the projected
 (low-dimensional) space. The parameters used for the experiments are the default
@@ -132,7 +132,7 @@ values of the different scripts (`run_mrse, run_ssim`).\
 Depending on the experiment either the mean/expected mean root squared error
 ($E\left[d\right]$) or the mean/expected Structural Similarity Index
 ($E\left[SSIM\right]$) is computed.\
-For $E\left[d\right]$ a low runtimes and a low error is desired. For $E\left[SSIM\right]$
+For $E\left[d\right]$ a low runtimes and a low error are desired. For $E\left[SSIM\right]$
 a value close to 1 is desired, while also having a low expected runtime.
 
 ### Spatiotemporal Dynamics
@@ -146,14 +146,14 @@ f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \
 
 |                                                                                                                    ![spatiotemporal_stats](./figures/highdim_stats.png)                                                                                                                    |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| _Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD. Dashed ellipse indicate error- and time covariance. A dashed line is a collapsed ellipse. In this case only the execution times vary. VarProDMD uses Trust Region Optimization (TRF) during the experiment._ |
+| _Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD. A dashed ellipse indicates error- and time covariance. A dashed line is a collapsed ellipse. In this case, only the execution times vary. VarProDMD uses Trust Region Optimization (TRF) during the experiment._ |
 
 ### Oscillations
 
 The oscillation experiment (taken from
 [here](https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb))
 consists of $64$ _complex_ $128 \times 128 px$ images.\
-Formula for generating the time dependent complex images:
+The formula for generating the time-dependent complex images:
 
 ```math
 f\left(x,y,t\right) = \frac{2}{\cosh{\left(x\right)}\cosh{\left(y\right)}} 1.2j^{-t}
@@ -178,7 +178,7 @@ $128 \times 128 px$ images.\
 The formula for generating the images was taken from [here](https://epubs.siam.org/doi/abs/10.1137/15M1023543):
 
 ```math
-f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)\right)\right)}
+f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)^2\right)\right)}
 ```
 
 |                                                   ![moving_points](./figures/moving_points.png)                                                   |

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -35,13 +35,19 @@ dependencies = [
     "seaborn",
     "netCDF4",
     "colorama",
-    "wget"
+    "wget",
+    "SciencePlots"
 ]
 
-[tool.hatch.build]
-include = [
-  "varprodmdstatspy"
+[tool.hatch]
+version.source = "vcs"
+build.hooks.vcs.version-file = "varprodmdstatspy/_version.py"
+build.include = [
+"varprodmdstatspy",
+  "experiments",
+  "visualization"
 ]
+
 
 [project.optional-dependencies]
 test = [
@@ -58,7 +64,6 @@ dev = ["anybadge",
        "hatchling",
        "nox",
        "pre-commit",
-       "SciencePlots",
        "memray"]
 
 docs = [
@@ -149,6 +154,6 @@ messages_control.disable = [
 ]
 
 [project.scripts]
-run_ssim = "varprodmdstatspy.varprodmd_ssim_performance:run_ssim"
-run_mrse = "varprodmdstatspy.varprodmd_mrse_performance:run_mrse"
-visualize_stats = "varprodmdstatspy.visualize_results:visualize_stats"
+run_ssim = "experiments.varprodmd_ssim_performance:run_ssim"
+run_mrse = "experiments.varprodmd_mrse_performance:run_mrse"
+visualize_stats = "visualization.visualize_results:visualize_stats"

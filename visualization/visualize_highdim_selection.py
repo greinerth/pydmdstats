@@ -21,7 +21,7 @@ if __name__ == "__main__":
     z_signal = signal(_x, _time).T
     _x = _x.T
     _time = _time.T
-    # OPT_ARGS["loss"] = "huber"
+
     dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, exact=True)
     dmd.fit(z_signal, time)
 
