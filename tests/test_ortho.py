@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 from pydmd import VarProDMD
 from pydmd.utils import compute_svd
-
 from varprodmdstatspy.util.experiment_utils import signal
 
 

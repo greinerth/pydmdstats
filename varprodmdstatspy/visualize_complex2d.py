@@ -1,16 +1,17 @@
 """Visualize the damped oscillation in image space"""
-
-from typing import List, Tuple
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+import scienceplots  # noqa: F401
 from pydmd import BOPDMD, VarProDMD
+
+generator = np.random.Generator(np.random.PCG64())
 
 
 def generate_complex2d(
     std: float = -1,
-) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Generate damped oscillating signal
 
     Args:
@@ -18,7 +19,7 @@ def generate_complex2d(
                                If <= 0 no noise is added. Defaults to -1.
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, List[np.ndarray]]: snapshots, timestamps, data
+        Tuple[np.ndarray, np.ndarray, np.ndarray]: snapshots, timestamps, data
     """
     timestamps = np.linspace(0, 6, 16)
     x_1 = np.linspace(-3, 3, 128)
@@ -33,13 +34,15 @@ def generate_complex2d(
     for j, img in enumerate(data):
         __img = img.copy()
         if std > 0:
-            __img += np.random.normal(0, std, data[j].shape)
+            __img += generator.normal(0, std, img.shape)
             data[j] = __img
         snapshots_flat[:, j] = np.ravel(__img)
     return snapshots_flat, timestamps, np.concatenate(data, axis=0)
 
 
 if __name__ == "__main__":
+    plt.style.use("science")
+
     OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
     N_SAMPLES = 4
@@ -58,7 +61,7 @@ if __name__ == "__main__":
 
     fig1, ax1 = plt.subplots(3, N_SAMPLES)
     fig2, ax2 = plt.subplots(3, N_SAMPLES)
-    fig1.suptitle("Real Part", fontsize=16)
+    # fig1.suptitle("Real Part", fontsize=16)
     fig2.suptitle("Imaginary Part", fontsize=16)
 
     for i in range(1, N_SAMPLES):

@@ -1,5 +1,3 @@
 {
-    "recommendations": [
-        "charliermarsh.ruff"
-    ]
+  "recommendations": ["charliermarsh.ruff", "tamasfe.even-better-toml"]
 }
