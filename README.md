@@ -178,7 +178,7 @@ $128 \times 128 px$ images.\
 The formula for generating the images was taken from [here](https://epubs.siam.org/doi/abs/10.1137/15M1023543):
 
 ```math
-f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)\right)^2\right)}
+f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i = \exp{\left(-\sigma\left(\left(x - x_{c,i}\right)^2 + \left(y - y_{c,i}\right)^2\right)\right)}
 ```
 
 |                                                   ![moving_points](./figures/moving_points.png)                                                   |
