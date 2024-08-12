@@ -1,9 +1,11 @@
 """Visualize library selection scheme"""
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
 from pydmd.varprodmd import VarProDMD
-from util.experiment_utils import signal
+
+from .util.experiment_utils import signal
 
 if __name__ == "__main__":
     OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
@@ -20,7 +22,7 @@ if __name__ == "__main__":
     # OPT_ARGS["loss"] = "huber"
     __dmd = VarProDMD(compression=COMP, optargs=OPT_ARGS, exact=True)
     __dmd.fit(z_signal, time)
-    print(__dmd.eigs.imag)
+
     __indices = __dmd.selected_samples
     __pred = __dmd.forecast(time)
 

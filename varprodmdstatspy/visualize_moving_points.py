@@ -1,18 +1,18 @@
 """Visualize the moving points example.
 Two points in image space moving with different velocities.
 """
-
-from typing import List, Tuple
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
 from pydmd import BOPDMD, VarProDMD
-from util.experiment_utils import signal2d
+
+from .util.experiment_utils import signal2d
 
 
 def generate_moving_points(
     std: float = -1,
-) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, list[np.ndarray]]:
     """Generate moving points example
 
     Args:
@@ -34,7 +34,8 @@ def generate_moving_points(
     for j in range(timestamps.size):
         imgs[j] = signal2d(__x, __y, x_0, y_0, velocity, timestamps[j])
         if std > 0:
-            imgs[j] += np.random.normal(0, std, imgs[0].shape)
+            generator = np.random.Generator(np.random.PCG64)
+            imgs[j] += generator.normal(0, std, imgs[0].shape)
             snapshots_flat[:, j] = np.ravel(imgs[j])
     return snapshots_flat.astype(np.complex128), timestamps, imgs
 

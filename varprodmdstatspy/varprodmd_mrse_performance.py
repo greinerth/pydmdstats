@@ -1,19 +1,17 @@
-#!/usr/bin/python3
-# pylint: skip-file
 """
 VarProDMD vs BOPDMD on MRSE
 """
+from __future__ import annotations
 
 import argparse
 import inspect
 import logging
-import os
 import pickle
 from itertools import product, starmap
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any
 
 import numpy as np
-from colorama import Fore
 
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
@@ -30,7 +28,7 @@ OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 # OPT_ARGS = {"method": 'lm', "loss": 'linear'}
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     time = np.linspace(0, 4 * np.pi, 100)
     x_loc = np.linspace(-10, 10, 1024)
     __x, __time = np.meshgrid(x_loc, time)
@@ -60,12 +58,9 @@ def run_mrse():
     N_RUNS = 100
     COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
 
-    currentdir = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
+    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve()))
 
-    # FILE = os.path.join(PATH, DATASET)
-    OUTDIR = os.path.join(currentdir, "output")
+    OUTDIR = currentdir / "output"
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
 
     parser.add_argument(
@@ -124,7 +119,7 @@ def run_mrse():
         action="store_true",
         default=False,
         dest="scale_jac",
-        help="Scale the search directions with inverse jacobian, [Defaulf: False]",
+        help="Scale the search directions with inverse jacobian, [Default: False]",
     )
     __args = parser.parse_args()
     # manager = mp.Manager()
@@ -144,7 +139,8 @@ def run_mrse():
     logging.info("Solver parameters")
     logging.info("=================")
     for kw in OPT_ARGS:
-        logging.info(f"{kw}: {OPT_ARGS[kw]}")
+        msg = f"{kw}: {OPT_ARGS[kw]}"
+        logging.info(msg)
     logging.info("\nStarting simulation...")
 
     args_in = []
@@ -166,7 +162,7 @@ def run_mrse():
     mrse_mean_list = []
 
     for res in starmap(test_high_dim_signal, args_in):
-        logging.info(Fore.CYAN + res["case"])
+        logging.info(res["case"])
 
         std = res["std"]
         method = res["method"]
@@ -182,18 +178,21 @@ def run_mrse():
         std_noise_list.append(std)
         mrse_mean_list.append(mean_mrse)
 
-        logging.info(Fore.WHITE + f"{method} - Mean RSE: {mean_mrse}")
-        # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
-        stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
-        logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
+        msg = f"{method} - Mean RSE: {mean_mrse}"
+        logging.info(msg)
+        stats = f"{
+            method} - Mean exec time: {mean_t} [s], Std exec time: {std_t} [s]"
+        logging.info(stats)
 
         if std > 0:
-            logging.info(Fore.WHITE + f"{method} - Noise STD: {std}")
+            msg = f"{method} - Noise STD: {std}"
+            logging.info(msg)
 
         if method == "VarProDMD":
             comp = res["compression"]
             if comp > 0:
-                logging.info(Fore.WHITE + f"VarProDMD compression: {comp * 100:.2f}%")
+                msg = f"VarProDMD compression: {comp * 100:.2f}%"
+                logging.info(msg)
         logging.info("\n")
 
     data_dict = {
@@ -211,21 +210,20 @@ def run_mrse():
     }
     loss = OPT_ARGS["loss"]
     opt = OPT_ARGS["method"]
-    out_path = os.path.join(__args.out, opt)
+    out_path = Path(__args.out) / opt
 
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
+    if not Path(out_path).exists():
+        Path(out_path).mkdir(parents=True)
 
     if "x_scale" not in OPT_ARGS:
-        FILE_OUT = os.path.join(out_path, f"MRSE_highdim_{N_RUNS}_{loss}.pkl")
+        FILE_OUT = out_path / f"MRSE_highdim_{N_RUNS}_{loss}.pkl"
     else:
-        FILE_OUT = os.path.join(
-            out_path, f"MRSE_highdim_{N_RUNS}_{loss}_inv_jac_scale.pkl"
-        )
+        FILE_OUT = out_path / f"MRSE_highdim_{N_RUNS}_{loss}_inv_jac_scale.pkl"
 
-    logging.info(f"Storing results to {FILE_OUT}")
+    msg = f"Storing results to {FILE_OUT}"
+    logging.info(msg)
 
-    with open(FILE_OUT, "wb") as handle:
+    with Path(FILE_OUT).open("wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

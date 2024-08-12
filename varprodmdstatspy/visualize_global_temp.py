@@ -1,8 +1,8 @@
 """Visualize the global temperature in image space"""
+from __future__ import annotations
 
 import inspect
-import os
-from typing import List, Tuple
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import netCDF4 as nc
@@ -10,12 +10,12 @@ import numpy as np
 from pydmd import BOPDMD, VarProDMD
 
 # from util.experiment_utils import OPT_ARGS
-from varprodmd_ssim_performance import download
+from .varprodmd_ssim_performance import download
 
 
 def generate_global_temp(
     std: float = -1,
-) -> Tuple[np.ndarray, np.ndarray, List[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, list[np.ndarray]]:
     """Read Sea Surface Temperature and augment with noise.
 
     Args:
@@ -27,19 +27,17 @@ def generate_global_temp(
     """
     DATASET = "sst.day.mean.ltm.1982-2010.nc"
     YEARS = 2010 - 1982
-    currentdir = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
-    FILE = os.path.join(currentdir, "data")
+    currentdir = Path(Path.resolve(inspect.getfile(inspect.currentframe())).parent)
+    FILE = currentdir / "data"
 
-    if not os.path.exists(FILE):
-        os.makedirs(FILE)
+    if not Path.exists(FILE):
+        Path.mkdir(FILE, parents=True)
         download(
             "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-            os.path.join(FILE, DATASET),
+            FILE / DATASET,
         )
 
-    FILE = os.path.join(FILE, DATASET)
+    FILE = FILE / DATASET
     dataset = nc.Dataset(FILE)
     sst = dataset["sst"][:]
 
@@ -65,7 +63,8 @@ def generate_global_temp(
         __img = sst[j]
         __noisy = __img.copy()
         if std > 0:
-            __noisy += np.random.normal(0.0, std, size=__img.shape)
+            generator = np.random.Generator(np.random.PCG64)
+            __noisy += generator.normal(0.0, std, size=__img.shape)
         __flat[:, j] = np.ravel(__noisy)[__msk_flat]
     __flat = __flat.astype(np.complex128)
     return __flat, timestamps, sst, __msk_flat

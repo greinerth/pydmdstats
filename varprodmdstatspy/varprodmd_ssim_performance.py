@@ -1,22 +1,20 @@
-#!/usr/bin/python3
-# pylint: skip-file
 """
 VarProDMD vs BOPDMD on SSIM
 """
+from __future__ import annotations
 
 import argparse
 import inspect
 import logging
-import os
 import pickle
 from itertools import product, starmap
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any
 
 # import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
 import wget
-from colorama import Fore
 
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
@@ -44,7 +42,7 @@ def download(url: str, outdir: str):
 
 def test_complex2d_signal(
     method: str, n_runs: int, std: float, eps: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     time = np.linspace(0, 6, 64)
     x1 = np.linspace(-3, 3, 128)
     x2 = np.linspace(-3, 3, 128)
@@ -77,7 +75,7 @@ def test_complex2d_signal(
 
 def test_2_moving_points(
     method: str, n_runs: int, std: float, eps: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     fps = 30.0
     total_time = 5.0
     velocity = fps / total_time / 4
@@ -111,14 +109,12 @@ def test_2_moving_points(
 
 def test_global_temp(
     method: str, n_runs: int, std: float, eps: float
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     DATASET = "sst.day.mean.ltm.1982-2010.nc"
     YEARS = 2010 - 1982
-    currentdir = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
-    FILE = os.path.join(currentdir, "data")
-    FILE = os.path.join(FILE, DATASET)
+    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve())).parent
+    FILE = currentdir / "data"
+    FILE = FILE / DATASET
     ds = nc.Dataset(FILE)
     sst = ds["sst"][:]
     low, high = ds["sst"].valid_range
@@ -162,13 +158,11 @@ def run_ssim():
     COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
     FCTS = list(fcts.keys())
 
-    currentdir = os.path.dirname(
-        os.path.abspath(inspect.getfile(inspect.currentframe()))
-    )
+    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve())).parent
 
     # PATH = os.path.join(currentdir, "data")
     # FILE = os.path.join(PATH, DATASET)
-    OUTDIR = os.path.join(currentdir, "output")
+    OUTDIR = currentdir / "output"
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
 
     parser.add_argument(
@@ -227,7 +221,7 @@ def run_ssim():
         action="store_true",
         default=False,
         dest="scale_jac",
-        help="Scale the search directions with inverse jacobian, [Defaulf: False]",
+        help="Scale the search directions with inverse jacobian, [Default: False]",
     )
     parser.add_argument(
         "-f",
@@ -240,7 +234,8 @@ def run_ssim():
     __args = parser.parse_args()
 
     if __args.fct not in fcts:
-        raise KeyError("f{__args.fct} not implemented!")
+        msg = "f{__args.fct} not implemented!"
+        raise KeyError(msg)
     # manager = mp.Manager()
     # results = manager.list()
     if __args.scale_jac:
@@ -252,16 +247,17 @@ def run_ssim():
         OPT_ARGS.pop("tr_solver", None)
 
     if __args.fct not in fcts:
-        raise KeyError("f{__args.fct} not implemented!")
+        msg = "f{__args.fct} not implemented!"
+        raise KeyError(msg)
 
-    PATH2DATASET = os.path.join(currentdir, "data")
+    PATH2DATASET = currentdir / "data"
 
-    if __args.fct == "global_temp" and not os.path.exists(PATH2DATASET):
+    if __args.fct == "global_temp" and not Path.exists(PATH2DATASET):
         logging.info("Downloading dataset...")
-        os.makedirs(PATH2DATASET)
+        Path(PATH2DATASET).mkdir(parents=True)
         download(
             "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-            os.path.join(PATH2DATASET, "sst.day.mean.ltm.1982-2010.nc"),
+            PATH2DATASET / "sst.day.mean.ltm.1982-2010.nc",
         )
 
     N_RUNS = abs(__args.runs)
@@ -273,7 +269,8 @@ def run_ssim():
     logging.info("=================")
 
     for key in OPT_ARGS:
-        logging.info(f"{key}: {OPT_ARGS[key]}")
+        msg = f"{key}: {OPT_ARGS[key]}"
+        logging.info(msg)
 
     logging.info("\nStarting simulation...")
 
@@ -314,18 +311,22 @@ def run_ssim():
         # omega_list.append(omega_size)
 
         std_ssim = np.sqrt(res["c_xx"])
-        logging.info(
-            Fore.WHITE + f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
-        )
-        # logging.info(Fore.WHITE + f"{method} - OMEGAS: {omega_size}")
-        stats = "{} - Mean exec time: {} [s], Std exec time: {} [s]"
-        logging.info(Fore.WHITE + stats.format(method, mean_t, std_t))
+        msg = f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
+        logging.info(msg)
+
+        stats = f"{
+            method} - Mean exec time: {mean_t} [s], Std exec time: {std_t} [s]"
+        logging.info(stats)
+
         if std > 0:
-            logging.info(Fore.WHITE + f"{method} - Noise STD: {std}")
+            msg = f"{method} - Noise STD: {std}"
+            logging.info(msg)
+
         if method == "VarProDMD":
             comp = res["compression"]
             if comp > 0:
-                logging.info(Fore.WHITE + f"VarProDMD compression: {comp * 100:.2f}%")
+                msg = f"VarProDMD compression: {comp * 100:.2f}%"
+                logging.info(msg)
         logging.info("\n")
 
     data_dict = {
@@ -344,21 +345,20 @@ def run_ssim():
 
     loss = OPT_ARGS["loss"]
     opt = OPT_ARGS["method"]
-    out_path = os.path.join(__args.out, opt)
+    out_path = Path(__args.out) / opt
 
-    if not os.path.exists(out_path):
-        os.makedirs(out_path)
+    if not Path(out_path).exists():
+        Path(out_path).mkdir(parents=True)
 
     if "x_scale" not in OPT_ARGS:
-        FILE_OUT = os.path.join(out_path, f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl")
+        FILE_OUT = out_path / f"SSIM_{__args.fct}_{N_RUNS}_{loss}.pkl"
     else:
-        FILE_OUT = os.path.join(
-            out_path, f"SSIM_{__args.fct}_{N_RUNS}_{loss}_inv_jac_scale.pkl"
-        )
+        FILE_OUT = out_path / f"SSIM_{__args.fct}_{N_RUNS}_{loss}_inv_jac_scale.pkl"
 
-    logging.info(f"Storing results to {FILE_OUT}")
+    msg = f"Storing results to {FILE_OUT}"
+    logging.info(msg)
 
-    with open(FILE_OUT, "wb") as handle:
+    with Path(FILE_OUT).open("wb") as handle:
         pickle.dump(data_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 

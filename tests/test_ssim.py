@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from varprodmdstatspy.util.experiment_utils import ssim_multi_images
 from varprodmdstatspy.visualize_complex2d import generate_complex2d
 
