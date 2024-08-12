@@ -22,7 +22,7 @@ resources.
 The easiest way to run the scripts is to use
 [VSCode's devcontainer capability](https://code.visualstudio.com/docs/devcontainers/containers).
 The project was tested on Ubuntu 22.04 (which also served as a host system for
-the devcontainers) with the Python3.11 interpreter.
+the devcontainers) with the Python3.11 and Python3.12 interpreter.
 
 ### Ubuntu 22.04
 
@@ -31,7 +31,7 @@ First, download this repository and execute the following commands
 
 ```
 cd /path/to/repository
-python3.11 -m pip --user install -e .
+pip --user install -e .
 ```
 
 For proper visualization of the results make sure LaTex is installed.\

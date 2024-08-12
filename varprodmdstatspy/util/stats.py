@@ -87,11 +87,8 @@ class ExecutionStats(Stats):
         delta_t = timeit.default_timer() - t_1
         self.push(delta_t)
 
-        if delta_t < self._min:
-            self._min = delta_t
-
-        if delta_t > self._max:
-            self._max = delta_t
+        self._min = min(delta_t, self._min)
+        self._max = max(delta_t, self._max)
 
         return res
 
