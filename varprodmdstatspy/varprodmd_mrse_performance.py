@@ -21,11 +21,10 @@ from varprodmdstatspy.util.experiment_utils import (
 )
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
-# logging.root.setLevel(logging.INFO)
+
 OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
 
-# OPT_ARGS = {"method": 'lm', "loss": 'linear'}
 def test_high_dim_signal(
     method: str, n_runs: int, std: float, eps: float
 ) -> dict[str, Any]:
@@ -34,13 +33,11 @@ def test_high_dim_signal(
     __x, __time = np.meshgrid(x_loc, time)
     z = signal(__x, __time).T
 
-    # time_stats, error_stats = dmd_stats(dmd, z, time, std, n_iter=n_runs)
     mean_err, mean_dt, c_xx, c_xy, c_yy = dmd_stats(
         method, z, time, std, OPT_ARGS, eps, n_iter=n_runs
     )
     return {
         "case": "High dimensional signal",
-        # "omega_size": omega_size,
         "method": method,
         "compression": eps,
         "n_runs": n_runs,
@@ -122,8 +119,7 @@ def run_mrse():
         help="Scale the search directions with inverse jacobian, [Default: False]",
     )
     __args = parser.parse_args()
-    # manager = mp.Manager()
-    # results = manager.list()
+
     if __args.scale_jac:
         OPT_ARGS["x_scale"] = "jac"
 
@@ -156,9 +152,7 @@ def run_mrse():
     c_xx_list = []
     c_xy_list = []
     c_yy_list = []
-    # exec_time_std_list = []
     std_noise_list = []
-    # omega_list = []
     mrse_mean_list = []
 
     for res in starmap(test_high_dim_signal, args_in):
@@ -199,16 +193,13 @@ def run_mrse():
 
     data_dict = {
         "Method": method_list,
-        # "N_eigs": omega_list,
         "c": comp_list,
-        # "Experiment": case_list,
         "E[t]": exec_time_mean_list,
         "E[MRSE]": mrse_mean_list,
         "STD_NOISE": std_noise_list,
         "c_xx": c_xx_list,
         "c_xy": c_xy_list,
         "c_yy": c_yy_list,
-        # "N_RUNS": N_RUNS,
     }
     loss = OPT_ARGS["loss"]
     opt = OPT_ARGS["method"]

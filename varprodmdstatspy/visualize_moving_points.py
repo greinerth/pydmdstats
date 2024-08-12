@@ -18,12 +18,10 @@ def generate_moving_points(
 ) -> tuple[np.ndarray, np.ndarray, list[np.ndarray]]:
     """Generate moving points example
 
-    Args:
-        std (float, optional):
-            Standard deviation, ignored when negative. Defaults to -1.
-
-    Returns:
-       Tuple[np.ndarray, np.ndarray, List[np.ndarray]]: snapshots, timestamps, data
+    :param std: Standard deviation, ignored when negative. Defaults to -1.
+    :type std: float, optional
+    :return: snapshots, timestamps, data
+    :rtype: tuple[np.ndarray, np.ndarray, list[np.ndarray]]
     """
     fps = 30.0
     total_time = 5.0

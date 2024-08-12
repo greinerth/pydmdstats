@@ -60,7 +60,6 @@ def test_complex2d_signal(
     )
     return {
         "case": "Complex 2D signal",
-        # "omega_size": omega_size,
         "method": method,
         "compression": eps,
         "n_runs": n_runs,
@@ -133,7 +132,6 @@ def test_global_temp(
     )
     return {
         "case": "Global temperature",
-        # "omega_size": omega_size,
         "method": method,
         "compression": eps,
         "n_runs": n_runs,
@@ -160,8 +158,6 @@ def run_ssim():
 
     currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
 
-    # PATH = os.path.join(currentdir, "data")
-    # FILE = os.path.join(PATH, DATASET)
     OUTDIR = currentdir / "output"
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
 
@@ -236,8 +232,7 @@ def run_ssim():
     if __args.fct not in fcts:
         msg = "f{__args.fct} not implemented!"
         raise KeyError(msg)
-    # manager = mp.Manager()
-    # results = manager.list()
+
     if __args.scale_jac:
         OPT_ARGS["x_scale"] = "jac"
 
@@ -287,13 +282,11 @@ def run_ssim():
     c_xx_list = []
     c_xy_list = []
     c_yy_list = []
-    # exec_time_std_list = []
+
     std_noise_list = []
-    # omega_list = []
     ssim_mean_list = []
 
     for res in starmap(fcts[__args.fct], __args_in):
-        # logging.info(Fore.CYAN + res["case"])
         std = res["std"]
         method = res["method"]
         mean_ssim = res["mean_err"]
@@ -307,8 +300,6 @@ def run_ssim():
         c_xy_list.append(res["c_xy"])
         c_yy_list.append(res["c_yy"])
         std_noise_list.append(std)
-        # case_list.append(res["case"])
-        # omega_list.append(omega_size)
 
         std_ssim = np.sqrt(res["c_xx"])
         msg = f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
