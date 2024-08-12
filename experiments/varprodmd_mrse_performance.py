@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
     dmd_stats,

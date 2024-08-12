@@ -15,7 +15,6 @@ from typing import Any
 import netCDF4 as nc
 import numpy as np
 import wget
-
 from varprodmdstatspy.util.experiment_utils import (
     comp_checker,
     dmd_stats,
@@ -29,13 +28,14 @@ logging.basicConfig(level=logging.INFO, filename=__name__)
 OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
 
-# OPT_ARGS = {"method": 'lm', "loss": 'linear'}
 def download(url: str, outdir: str):
     """Download dataset.
     Found on: https://stackoverflow.com/questions/15644964/python-progress-bar-and-downloads
-    Args:
-        url (str): url
-        fname (str): Output
+
+    :param url: url
+    :type url: str
+    :param outdir: Output
+    :type outdir: str
     """
     wget.download(url, outdir)
 
