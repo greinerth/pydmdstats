@@ -17,6 +17,8 @@ OPT_ARGS: dict[str, Any] = {  # pylint: disable=unused-variable
     # "x_scale": 'jac',
 }
 
+generator = np.random.Generator(np.random.PCG64())
+
 
 def signal2d(
     x_in: np.ndarray,
@@ -147,7 +149,6 @@ def comp_checker(x_in: Any) -> float:  # pylint: disable=unused-variable
 
 def _corrupt_data(data: np.ndarray, std: float) -> np.ndarray:
     _data = data.copy()
-    generator = np.random.Generator(np.random.PCG64())
     if std > 0:
         if np.iscomplexobj(data):
             _data.real += generator.normal(0.0, std, size=data.real.shape)

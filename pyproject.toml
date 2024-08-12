@@ -58,6 +58,7 @@ dev = ["anybadge",
        "hatchling",
        "nox",
        "pre-commit",
+       "SciencePlots",
        "memray"]
 
 docs = [

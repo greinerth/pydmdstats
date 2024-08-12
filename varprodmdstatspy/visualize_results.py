@@ -9,6 +9,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scienceplots  # noqa: F401
 import seaborn as sns
 from matplotlib import transforms
 from matplotlib.patches import Ellipse
@@ -20,10 +21,10 @@ logging.root.setLevel(logging.INFO)
 def visualize_stats():
     """Visualize statistics
 
-    Raises:
-        FileExistsError: When file does not exist
-        ValueError: When experiment is not supported.
+    :raises FileExistsError: When file does not exist
+    :raises ValueError: When experiment is not supported.
     """
+    plt.style.use("science")
     plt.rcParams["text.usetex"] = True
     sns.set_style("whitegrid")
 
@@ -52,7 +53,7 @@ def visualize_stats():
         if "E[SSIM]" in dataframe.columns:
             # std_error = dataframe["SSIM_STD"].to_numpy()
             expected_error = dataframe["E[SSIM]"].to_numpy()
-            dataframe.rename(
+            dataframe = dataframe.rename(
                 {
                     "E[SSIM]": r"$E\left[\overline{SSIM}\right]$",
                     "E[t]": r"$E\left[t\right]$ in $s$",
@@ -76,7 +77,7 @@ def visualize_stats():
         elif "E[MRSE]" in dataframe.columns:
             # std_error = dataframe["std[MRSE]"].to_numpy()
             expected_error = dataframe["E[MRSE]"].to_numpy()
-            dataframe.rename(
+            dataframe = dataframe.rename(
                 {
                     "E[MRSE]": r"$E\left[d\right]$ in $m$",
                     "E[t]": r"$E\left[t\right]$ in $s$",

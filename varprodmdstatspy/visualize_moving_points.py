@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scienceplots  # noqa: F401
 from pydmd import BOPDMD, VarProDMD
 
-from .util.experiment_utils import signal2d
+from util.experiment_utils import signal2d
+
+generator = np.random.Generator(np.random.PCG64())
 
 
 def generate_moving_points(
@@ -34,15 +37,14 @@ def generate_moving_points(
     for j in range(timestamps.size):
         imgs[j] = signal2d(__x, __y, x_0, y_0, velocity, timestamps[j])
         if std > 0:
-            generator = np.random.Generator(np.random.PCG64)
             imgs[j] += generator.normal(0, std, imgs[0].shape)
             snapshots_flat[:, j] = np.ravel(imgs[j])
     return snapshots_flat.astype(np.complex128), timestamps, imgs
 
 
 if __name__ == "__main__":
-    OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
-
+    plt.style.use("science")
+    OPT_ARGS = {"method": "lm"}
     N_SAMPLES = 4
     CMAP = "jet"
     STD = 4e-2

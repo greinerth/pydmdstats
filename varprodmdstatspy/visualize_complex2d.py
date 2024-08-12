@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scienceplots  # noqa: F401
 from pydmd import BOPDMD, VarProDMD
+
+generator = np.random.Generator(np.random.PCG64())
 
 
 def generate_complex2d(
@@ -31,7 +34,6 @@ def generate_complex2d(
     for j, img in enumerate(data):
         __img = img.copy()
         if std > 0:
-            generator = np.random.Generator(np.random.PCG64)
             __img += generator.normal(0, std, img.shape)
             data[j] = __img
         snapshots_flat[:, j] = np.ravel(__img)

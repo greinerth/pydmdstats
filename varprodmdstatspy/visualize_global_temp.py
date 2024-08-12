@@ -12,6 +12,8 @@ from pydmd import BOPDMD, VarProDMD
 # from util.experiment_utils import OPT_ARGS
 from .varprodmd_ssim_performance import download
 
+generator = np.random.Generator(np.random.PCG64())
+
 
 def generate_global_temp(
     std: float = -1,
@@ -63,7 +65,6 @@ def generate_global_temp(
         __img = sst[j]
         __noisy = __img.copy()
         if std > 0:
-            generator = np.random.Generator(np.random.PCG64)
             __noisy += generator.normal(0.0, std, size=__img.shape)
         __flat[:, j] = np.ravel(__noisy)[__msk_flat]
     __flat = __flat.astype(np.complex128)

@@ -112,7 +112,7 @@ def test_global_temp(
 ) -> dict[str, Any]:
     DATASET = "sst.day.mean.ltm.1982-2010.nc"
     YEARS = 2010 - 1982
-    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve())).parent
+    currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
     FILE = currentdir / "data"
     FILE = FILE / DATASET
     ds = nc.Dataset(FILE)
@@ -158,7 +158,7 @@ def run_ssim():
     COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
     FCTS = list(fcts.keys())
 
-    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve())).parent
+    currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
 
     # PATH = os.path.join(currentdir, "data")
     # FILE = os.path.join(PATH, DATASET)
@@ -257,7 +257,7 @@ def run_ssim():
         Path(PATH2DATASET).mkdir(parents=True)
         download(
             "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.ltm.1982-2010.nc",
-            PATH2DATASET / "sst.day.mean.ltm.1982-2010.nc",
+            str(PATH2DATASET / "sst.day.mean.ltm.1982-2010.nc"),
         )
 
     N_RUNS = abs(__args.runs)

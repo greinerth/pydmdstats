@@ -58,7 +58,7 @@ def run_mrse():
     N_RUNS = 100
     COMPS = [0.0, 0.2, 0.4, 0.6, 0.8]
 
-    currentdir = Path(Path(inspect.getfile(inspect.currentframe()).resolve()))
+    currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
 
     OUTDIR = currentdir / "output"
     parser = argparse.ArgumentParser("VarProDMD vs BOPDMD stats")
