@@ -4,12 +4,11 @@ import time
 
 import numpy as np
 import pytest
-
-from varprodmdstatspy.util.stats import runtime_stats, Stats
+from varprodmdstatspy.util.stats import Stats, runtime_stats
 
 
 def test_stats() -> None:
-    """ Test running mean/variance."""
+    """Test running mean/variance."""
     stats = Stats()
     for _ in range(100):
         stats.push(5.0)
@@ -22,16 +21,17 @@ def test_stats() -> None:
 
     msg = "Need more samples!"
     with pytest.raises(ZeroDivisionError, match=msg):
-        stats.var
+        _ = stats.var
 
 
 def test_runtime_stats() -> None:
     """Test runtime statistics."""
     STD_TIME = 1e-3
     N_RUNS = 100
+    generator = np.random.Generator(np.random.PCG64())
 
     def dumm_func(sleep_time: float, std: float):
-        tts = np.random.normal(0, std) + sleep_time
+        tts = generator.normal(0, std) + sleep_time
         time.sleep(tts)
 
     wrapped_func = runtime_stats(False)(dumm_func)

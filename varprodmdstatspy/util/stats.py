@@ -1,10 +1,13 @@
 """Runtime statistics for execution times"""
+from __future__ import annotations
 
-# import timeit
+import logging
 import timeit
 from typing import Any, Callable
 
 import numpy as np
+
+logging.basicConfig(level=logging.INFO, filename=__name__)
 
 
 class Stats:
@@ -30,9 +33,9 @@ class Stats:
 
     def reset(self) -> None:
         """Reset all values."""
-        self._mean: float = 0.0
-        self._var_hat: float = 0.0
-        self._cnt: int = 1
+        self._mean = 0.0
+        self._var_hat = 0.0
+        self._cnt = 1
 
     @property
     def mean(self) -> float:
@@ -52,7 +55,8 @@ class Stats:
         :rtype: float
         """
         if self._cnt == 1:
-            raise ZeroDivisionError("Need more samples!")
+            msg = "Need more samples!"
+            raise ZeroDivisionError(msg)
         return self._var_hat / float(self._cnt - 1)
 
     @property
@@ -62,21 +66,15 @@ class Stats:
         :return: Sample standard deviation.
         :rtype: float
         """
-        return np.sqrt(self.var)
+        return float(np.sqrt(self.var))
 
 
 class ExecutionStats(Stats):
-    """Measure the execution time of a function/method
-
-    Raises:
-        ZeroDivisionError: If only 1 samples was taken for
-                           variance calulation
-
-    """
+    """Measure the execution time of a function/method"""
 
     __slots__ = ["_func", "_verbose", "_min", "_max"]
 
-    def __init__(self, function: Callable, verbose: bool = True) -> None:
+    def __init__(self, function: Callable[[Any], Any], verbose: bool = True) -> None:
         super().__init__()
         self._func = function
         self._verbose: bool = verbose
@@ -99,48 +97,47 @@ class ExecutionStats(Stats):
 
     @property
     def min(self) -> float:
-        """Return minimal encountered execution time
+        """Return minimum encountered execution time
 
-        Returns:
-            float: minimal encountered execution time
+        :return: Minimum encountered execution time_description_
+        :rtype: float
         """
-        return self.__min
+        return self._min
 
     @property
     def max(self) -> float:
         """Return maximum encountered execution time
 
-        Returns:
-            float: maximum encountered execution time
+        :return: Maximum encountered execution time_description_
+        :rtype: float
         """
-        return self.__max
+        return self._max
 
-    def reset(self):
-        """reset the stats"""
+    def reset(self) -> None:
+        """Reset the stats"""
         super().reset()
-        self.__min = float("inf")
-        self.__max = 0.0
+        self._min = float("inf")
+        self._max = 0.0
 
-    def __del__(self):
+    def __del__(self) -> None:
         if self._verbose:
-            __stats = f"\n{self._func.__name__ } stats:\n"
-            __stats += f"Mean execution time: {self.mean} [s]\n"
+            stats = f"\n{self._func.__name__} stats:\n"
+            stats += f"Mean execution time: {self.mean} [s]\n"
             if self._cnt > 1:
-                __stats += f"Var execution time: {self.var} [s]\n"
-            print(__stats)
+                stats += f"Var execution time: {self.var} [s]\n"
+            logging.info(stats)
 
 
-def runtime_stats(verbose: bool = True) -> Callable:  # pylint: disable=unused-variable
-    """runtime stats wrapper
+def runtime_stats(verbose: bool = True) -> Callable[[Any], Any]:
+    """Runtime stats wrapper
 
-    Args:
-        func (Callable): Function to wrap
-
-    Returns:
-        ExecutionStats: ExecutionStats object
+    :param verbose: Set verbosity level, defaults to True
+    :type verbose: bool, optional
+    :return: ExecutionStats object
+    :rtype: Callable[[Any], Any]
     """
 
-    def decorator(func: Callable):
+    def decorator(func: Callable[[Any], Any]) -> ExecutionStats:
         return ExecutionStats(func, verbose)
 
     return decorator
