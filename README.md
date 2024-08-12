@@ -144,8 +144,8 @@ The formula for generating the spatiotemporal dynamics (taken from
 f\left(x, t\right) = \frac{1}{\cosh\left(x + 3\right)}\exp\left(j2.3t\right) + \frac{2}{\cosh\left(x\right)}\tanh\left(x\right)\exp\left(j2.8t\right)
 ```
 
-|                                                                                                                    ![spatiotemporal_stats](./figures/highdim_stats.png)                                                                                                                    |
-| :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                                                                                                      ![spatiotemporal_stats](./figures/highdim_stats.png)                                                                                                                      |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | _Spatiotemporal Signal experiment: Expected runtime for BOPDMD and VarProDMD. A dashed ellipse indicates error- and time covariance. A dashed line is a collapsed ellipse. In this case, only the execution times vary. VarProDMD uses Trust Region Optimization (TRF) during the experiment._ |
 
 ### Oscillations
