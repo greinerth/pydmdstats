@@ -314,8 +314,10 @@ def run_ssim():
         msg = f"{method} - Mean SSIM: {mean_ssim}, Std SSIM: {std_ssim}"
         logging.info(msg)
 
-        stats = f"{
-            method} - Mean exec time: {mean_t} [s], Std exec time: {std_t} [s]"
+        stats = " ".join(
+            [f"{method} - Mean exec time: {mean_t} [s],", f"Std exec time: {std_t} [s]"]
+        )
+
         logging.info(stats)
 
         if std > 0:
