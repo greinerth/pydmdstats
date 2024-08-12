@@ -7,8 +7,8 @@ from typing import Any
 import numpy as np
 from pydmd.bopdmd import BOPDMD
 from pydmd.varprodmd import VarProDMD
-from skimage.metrics import (
-    structural_similarity as ssim,  # pylint: disable=no-name-in-module
+from skimage.metrics import (  # pylint: disable=no-name-in-module
+    structural_similarity as ssim,
 )
 
 from varprodmdstatspy.util import stats
