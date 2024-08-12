@@ -28,9 +28,9 @@ def test_runtime_stats() -> None:
     """Test runtime statistics."""
     STD_TIME = 1e-3
     N_RUNS = 100
+    generator = np.random.Generator(np.random.PCG64())
 
     def dumm_func(sleep_time: float, std: float):
-        generator = np.random.Generator(np.random.PCG64())
         tts = generator.normal(0, std) + sleep_time
         time.sleep(tts)
 
