@@ -38,19 +38,8 @@ dependencies = [
     "wget",
     "tqdm",
     "h5py",
-    "plotly",
     "SciencePlots"
 ]
-
-[tool.hatch]
-version.source = "vcs"
-build.hooks.vcs.version-file = "varprodmdstatspy/_version.py"
-build.include = [
-"varprodmdstatspy",
-  "experiments",
-  "visualization"
-]
-
 
 [project.optional-dependencies]
 test = [
@@ -75,6 +64,15 @@ docs = [
   "sphinx_copybutton",
   "sphinx_autodoc_typehints",
   "furo>=2023.08.17",
+]
+
+[tool.hatch]
+version.source = "vcs"
+build.hooks.vcs.version-file = "varprodmdstatspy/_version.py"
+build.include = [
+"varprodmdstatspy",
+  "experiments",
+  "visualization"
 ]
 
 [tool.coverage]
