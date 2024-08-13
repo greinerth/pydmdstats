@@ -36,6 +36,9 @@ dependencies = [
     "netCDF4",
     "colorama",
     "wget",
+    "tqdm",
+    "h5py",
+    "plotly",
     "SciencePlots"
 ]
 
@@ -154,6 +157,7 @@ messages_control.disable = [
 ]
 
 [project.scripts]
+pdebench_dl = "experiments.util.pdebench_data_download:pdebench_downdload"
 run_ssim = "experiments.varprodmd_ssim_performance:run_ssim"
 run_mrse = "experiments.varprodmd_mrse_performance:run_mrse"
 visualize_stats = "visualization.visualize_results:visualize_stats"
