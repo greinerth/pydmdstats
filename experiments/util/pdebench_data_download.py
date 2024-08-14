@@ -86,15 +86,17 @@ def download_data(root_folder: str, pde_name: list[str]) -> None:
             Path(file_path).mkdir(parents=True)
 
         fname = str(file_path / row["Filename"])
-        proc = subprocess.Popen(
-            ["wget", "-O", fname, row["URL"]], stdout=subprocess.PIPE
-        )
-        for line in proc.stdout:
-            sys.stdout.write(line)
+        if not Path(fname).exists():
+            proc = subprocess.Popen(
+                ["wget", "-O", fname, row["URL"]], stdout=subprocess.PIPE
+            )
+            for line in proc.stdout:
+                sys.stdout.write(line)
 
 
 def pdebench_downdload() -> None:
     """Download pdebench data"""
+
     arg_parser = argparse.ArgumentParser(
         prog="Download Script",
         description="Helper script to download the PDEBench datasets",

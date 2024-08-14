@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots  # noqa: F401
 from pydmd.varprodmd import VarProDMD
-
-from util.experiment_utils import signal
+from varprodmdstatspy.util.experiment_utils import signal
 
 if __name__ == "__main__":
     plt.style.use("science")

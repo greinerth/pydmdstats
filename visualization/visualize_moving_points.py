@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots  # noqa: F401
 from pydmd import BOPDMD, VarProDMD
-
-from util.experiment_utils import signal2d
+from varprodmdstatspy.util.experiment_utils import signal2d
 
 generator = np.random.Generator(np.random.PCG64())
 
