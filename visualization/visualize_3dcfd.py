@@ -129,9 +129,14 @@ if __name__ == "__main__":
     msg = f"BOPDMD omega:\n{bopdmd.eigs}"
     logging.info(msg)
 
-    mrse_vardmd = np.linalg.norm(dataflat - vardmd.forecast(time).real, axis=0).mean()
-
-    mrse_bopdmd = np.linalg.norm(dataflat - bopdmd.forecast(time).real, axis=0).mean()
+    mrse_vardmd = (
+        np.linalg.norm(dataflat - vardmd.forecast(time).real, axis=0)
+        / np.sqrt(dataflat.shape[0])
+    ).mean()
+    mrse_bopdmd = (
+        np.linalg.norm(dataflat - bopdmd.forecast(time).real, axis=0)
+        / np.sqrt(dataflat.shape[0])
+    ).mean()
 
     msg = f"VarProDMD-RMSE: {mrse_vardmd:.4f}"
     logging.info(msg)
