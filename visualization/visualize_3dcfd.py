@@ -4,6 +4,7 @@ from __future__ import annotations
 import inspect
 import logging
 from pathlib import Path
+from typing import Any
 
 import h5py as h5
 import matplotlib as mpl
@@ -28,7 +29,7 @@ def densityplot3d(
     vmin: float | None = None,
     vmax: float | None = None,
     **kwargs,
-) -> None:
+) -> Any:
     """Create a density plot for X, Y, Z coordinates and corresponding intensity values.
     Found on https://github.com/Onkeljoe1234/density_plots_matplotlib/blob/main/Density_plot.ipynb
     Slightly adapted to specific needs.
@@ -78,10 +79,11 @@ def densityplot3d(
     colors_flattened = colors.reshape(-1, colors.shape[-1])
 
     # Plot a 3D scatter with adjusted alphas
-    ax.scatter(x, y, z, c=colors_flattened, **kwargs)
+    return ax.scatter(x, y, z, c=colors_flattened, **kwargs)
 
 
 if __name__ == "__main__":
+    split = 0.4
     currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
     file = (
         currentdir.parent
@@ -89,10 +91,13 @@ if __name__ == "__main__":
         / "data"
         / "3D"
         / "Train"
-        / "3D_CFD_Turb_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
+        / "3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
     )
     h5file = h5.File(str(file))
-    data = h5file["density"][10]
+    vx = h5file["Vx"][32]
+    vy = h5file["Vy"][32]
+    vz = h5file["Vz"][32]
+    data = np.concatenate([vx[..., None], vy[..., None], vz[..., None]], axis=-1)
     msg = f"Data shape : {data.shape}"
     logging.info(msg)
 
@@ -100,6 +105,7 @@ if __name__ == "__main__":
     y_coords = np.array(h5file["y-coordinate"][:])
     z_coords = np.array(h5file["z-coordinate"][:])
     time = np.array(h5file["t-coordinate"][:-1])
+    n_train = int((1.0 - split) * time.shape[-1])
 
     # np.meshgrid(x_coords, y_coords, z_coords)
     x_coords, y_coords, z_coords = np.meshgrid(x_coords, y_coords, z_coords)
@@ -115,14 +121,14 @@ if __name__ == "__main__":
             "loss": "linear",
             "x_scale": "jac",
         },
-        sorted_eigs="auto",
-        # svd_rank=6
+        sorted_eigs="imag",
+        # svd_rank=3
     )
 
-    bopdmd = BOPDMD(eig_sort="auto", trial_size=data.shape[-1])
+    bopdmd = BOPDMD(eig_sort="imag", trial_size=n_train)
 
-    vardmd.fit(dataflat, time)
-    bopdmd.fit(dataflat, time)
+    vardmd.fit(dataflat[:, :n_train], time[:n_train])
+    bopdmd.fit(dataflat[:, :n_train], time[:n_train])
 
     msg = f"VarProDMD omega:\n{vardmd.eigs}"
     logging.info(msg)
@@ -151,21 +157,25 @@ if __name__ == "__main__":
     axvar_flat = np.ravel(axvar)
 
     for i in range(vardmd.modes.shape[-1]):
-        mode = np.reshape(vardmd.modes[:, i].real, data.shape[1:], "F")
+        mode = np.reshape(vardmd.modes[:, i], data.shape[1:], "F")
+        mode = np.linalg.norm(mode, axis=-1)
 
         densityplot3d(
             axvar_flat[i],
-            x_coords[::2, ::2, ::2],
-            y_coords[::2, ::2, ::2],
-            z_coords[::2, ::2, ::2],
-            mode[::2, ::2, ::2],
+            x_coords[::4, ::4, ::4],
+            y_coords[::4, ::4, ::4],
+            z_coords[::4, ::4, ::4],
+            mode[::4, ::4, ::4],
             cmap=plt.cm.magma,
             marker="s",
-            decay=2.0,
+            decay=5.0,
         )
         axvar_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
 
     figvar.suptitle("VarProDMD")
+
+    for j in range(i + 1, axvar_flat.shape[-1]):
+        figvar.delaxes(axvar_flat[j])
 
     n_rows = int(np.floor(bopdmd.modes.shape[-1] / np.sqrt(bopdmd.modes.shape[-1])))
     n_cols = int(np.ceil(bopdmd.modes.shape[-1] / n_rows))
@@ -176,35 +186,72 @@ if __name__ == "__main__":
 
     for i in range(bopdmd.modes.shape[-1]):
         mode = np.reshape(bopdmd.modes[:, i].real, data.shape[1:], "F")
+        mode = np.linalg.norm(mode, axis=-1)
 
         densityplot3d(
             axbop_flat[i],
-            x_coords[::2, ::2, ::2],
-            y_coords[::2, ::2, ::2],
-            z_coords[::2, ::2, ::2],
-            mode[::2, ::2, ::2],
+            x_coords[::4, ::4, ::4],
+            y_coords[::4, ::4, ::4],
+            z_coords[::4, ::4, ::4],
+            mode[::4, ::4, ::4],
             cmap=plt.cm.magma,
             marker="s",
-            decay=2.0,
+            decay=5.0,
         )
         axbop_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
 
     figbop.suptitle("BOPDMD")
+
+    for j in range(i + 1, axbop_flat.shape[-1]):
+        figbop.delaxes(axbop_flat[j])
 
     figeigs, axeigs = plt.subplots(1, 1)
 
     for i in range(bopdmd.eigs.shape[-1]):
         axeigs.scatter(bopdmd.eigs[i].real, bopdmd.eigs[i].imag, color="r", marker="+")
 
-    axeigs.grid()
-
-    for j in range(i + 1, axvar_flat.shape[-1]):
-        figvar.delaxes(axvar_flat[j])
-
     for i in range(vardmd.eigs.shape[-1]):
         axeigs.scatter(vardmd.eigs[i].real, vardmd.eigs[i].imag, color="b", marker="x")
 
-    for j in range(i + 1, axbop_flat.shape[-1]):
-        figbop.delaxes(axbop_flat[j])
+    axeigs.grid()
 
+    # visualize original data
+    newdata = data[::4, ::4, ::4, ::4]
+    newdata = np.linalg.norm(newdata, axis=-1)
+    step = data.shape[0] // newdata.shape[0]
+
+    n_rows = int(np.floor(newdata.shape[0] / np.sqrt(newdata.shape[0])))
+    n_cols = int(np.ceil(newdata.shape[0] / n_rows))
+
+    figdata, axdata = plt.subplots(n_rows, n_cols, subplot_kw={"projection": "3d"})
+    axdata_flat = np.ravel(axdata)
+    vmin, vmax = newdata.min(), newdata.max()
+    for i in range(newdata.shape[0]):
+        timestep = r"$t_{" + rf"{i * step}" + r"}$"
+        scatter = densityplot3d(
+            axdata_flat[i],
+            x_coords[::4, ::4, ::4],
+            y_coords[::4, ::4, ::4],
+            z_coords[::4, ::4, ::4],
+            newdata[i],
+            cmap=plt.cm.magma,
+            marker="s",
+            decay=2.0,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        axdata_flat[i].set_title(timestep)
+        # axdata_flat[i].set_xlabel("x")
+        # axdata_flat[i].set_ylabel("y")
+        # axdata_flat[i].set_zlabel("z")
+        axdata_flat[i].set_xticks([])
+        axdata_flat[i].set_yticks([])
+        axdata_flat[i].set_zticks([])
+
+    for j in range(i + 1, axdata_flat.shape[-1]):
+        figdata.delaxes(axdata_flat[j])
+
+    cbar = figdata.colorbar(scatter, ax=axdata_flat.tolist(), shrink=0.95)
+    cbar.set_ticks(np.arange(0, 1.1, 0.5))
+    cbar.set_ticklabels(["low", "medium", "high"])
     plt.show()

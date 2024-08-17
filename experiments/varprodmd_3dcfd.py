@@ -3,7 +3,7 @@ Conduct 3d fluid dynamic example taken from pdebench data
 """
 from __future__ import annotations
 
-import inspect
+import argparse
 
 # import logging
 import timeit
@@ -23,7 +23,7 @@ from tqdm import tqdm
 
 
 def test_3dcfd(
-    data: np.ndarray, time: np.ndarray, split: float = 0.3
+    data: h5.File, time: np.ndarray, split: float = 0.3
 ) -> Generator[dict[str, Any], dict[str, Any]]:
     """Test 3D CFD example
 
@@ -43,10 +43,14 @@ def test_3dcfd(
         msg = "'split' must lie in (0, 1)!"
         raise ValueError(msg)
 
-    n_train = int((1.0 - split) * data.shape[1])
+    n_train = int((1.0 - split) * time.shape[-1])
 
-    for trial in range(data.shape[0]):
-        current_data = data[trial]
+    for trial in range(data["Vx"].shape[0]):
+        vx = data["Vx"][trial][..., None]
+        vy = data["Vy"][trial][..., None]
+        vz = data["Vz"][trial][..., None]
+
+        current_data = np.concatenate([vx, vy, vz], axis=-1)
         dataflat = np.zeros((np.prod(current_data.shape[1:]), current_data.shape[0]))
 
         for i in range(current_data.shape[0]):
@@ -57,9 +61,8 @@ def test_3dcfd(
                 "method": "trf",
                 "tr_solver": "exact",
                 "loss": "linear",
-                # "x_scale": "jac",
-            },
-            # compression=0.4
+                "x_scale": "jac",
+            }
         )
         bopdmd = BOPDMD(trial_size=dataflat.shape[-1])
 
@@ -98,28 +101,39 @@ def test_3dcfd(
 
 if __name__ == "__main__":
     plt.style.use("science")
-    split = 0.3
-    currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
-    file = (
-        currentdir
-        / "data"
-        / "3D"
-        / "Train"
-        / "3D_CFD_Turb_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
+    parser = argparse.ArgumentParser(
+        description="Perform experiments on 3D Fluid Dynamics dataset provided by pdebench repository."
     )
-    file = str(file)
+    parser.add_argument(
+        "-s",
+        "--split",
+        type=float,
+        default=0.3,
+        dest="split",
+        help="<Optional> Split a recorded trajectory for training and extraplotation. [Default: 0.3]",
+    )
+    parser.add_argument(
+        "-d",
+        "--data",
+        type=str,
+        required=True,
+        dest="data",
+        help="<Required> Specify path to .hdf5 data file",
+    )
+    args = parser.parse_args()
 
-    if not Path(file).exists():
-        msg = f"{file} does not exist!"
+    if not Path(args.data).exists():
+        msg = f"{args.data} does not exist!"
         raise FileNotFoundError(msg)
 
-    h5file = h5.File(str(file))
-    data = h5file["pressure"]
-    time = h5file["t-coordinate"][:-1]
+    h5file = h5.File(str(args.data), "r")
+
+    time = h5file["t-coordinate"][:-1].astype(np.float64)
+    n_samples = h5file["Vx"].shape[0]
 
     fig, ax = plt.subplots(1, 2)
-    varrt = np.zeros((data.shape[0],))
-    boprt = np.zeros((data.shape[0],))
+    varrt = np.zeros((n_samples,))
+    boprt = np.zeros((n_samples,))
 
     varprodmd_mean_mrse = np.zeros_like(time)
     bopdmd_mean_mrse = np.zeros_like(varprodmd_mean_mrse)
@@ -128,8 +142,9 @@ if __name__ == "__main__":
     var_hat_bopdmd = np.zeros_like(bopdmd_mean_mrse)
 
     for run, (bopdmd, vardmd) in tqdm(
-        enumerate(test_3dcfd(data, time, split)), total=data.shape[0]
+        enumerate(test_3dcfd(h5file, time, args.split)), total=n_samples
     ):
+        # calculate running average and variance
         delta_bopdmd = bopdmd["mrse"] - bopdmd_mean_mrse
         delta_vardmd = vardmd["mrse"] - varprodmd_mean_mrse
         bopdmd_mean_mrse += delta_bopdmd / float(run + 1)
@@ -139,8 +154,8 @@ if __name__ == "__main__":
         varrt[run] = vardmd["dt"]
         boprt[run] = bopdmd["dt"]
 
-    std_varprodmd = np.sqrt(var_hat_varprodmd / float(data.shape[0] - 1))
-    std_bopdmd = np.sqrt(var_hat_bopdmd / float(data.shape[0] - 1))
+    std_varprodmd = np.sqrt(var_hat_varprodmd / float(n_samples - 1))
+    std_bopdmd = np.sqrt(var_hat_bopdmd / float(n_samples - 1))
 
     # plot expected errors and 95 % confidence interval
     ax[0].plot(time, bopdmd_mean_mrse, color="r", label="BOPDMD")
@@ -161,7 +176,7 @@ if __name__ == "__main__":
     )
     rect = Rectangle(
         (0, ax[0].get_ylim()[0]),
-        time[int((1.0 - split) * data.shape[1])],
+        time[int((1.0 - args.split) * time.shape[-1])],
         np.subtract(*ax[0].get_ylim()[::-1]),
         facecolor="grey",
         alpha=0.4,
