@@ -9,7 +9,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scienceplots  # noqa: F401
 import seaborn as sns
 from matplotlib import transforms
 from matplotlib.patches import Ellipse
@@ -24,7 +23,7 @@ def visualize_stats():
     :raises FileExistsError: When file does not exist
     :raises ValueError: When experiment is not supported.
     """
-    plt.style.use("science")
+    # plt.style.use("science")
     plt.rcParams["text.usetex"] = True
     sns.set_style("whitegrid")
 
@@ -37,12 +36,18 @@ def visualize_stats():
         required=True,
         help="Path to .pkl file",
     )
-    __args = parser.parse_args()
-    if not Path(__args.path).exists():
-        msg = f"{__args.path} does not exist!"
+    parser.add_argument(
+        "--logx", dest="logx", action="store_true", help="Logscale for x-axis"
+    )
+    parser.add_argument(
+        "--logy", dest="logy", action="store_true", help="Logscale for y-axis"
+    )
+    args = parser.parse_args()
+    if not Path(args.path).exists():
+        msg = f"{args.path} does not exist!"
         raise FileExistsError(msg)
 
-    with Path(__args.path).open("rb") as handle:
+    with Path(args.path).open("rb") as handle:
         data = pickle.load(handle)
 
         dataframe = pd.DataFrame(data)
@@ -63,7 +68,7 @@ def visualize_stats():
                 axis="columns",
             )
 
-            g0 = sns.FacetGrid(dataframe, col=r"$\sigma_{std}$")
+            g0 = sns.FacetGrid(dataframe, col=r"$\sigma_{std}$", sharex=False)
             g0.map_dataframe(
                 sns.scatterplot,
                 r"$E\left[\overline{SSIM}\right]$",
@@ -86,7 +91,7 @@ def visualize_stats():
                 },
                 axis="columns",
             )
-            g0 = sns.FacetGrid(dataframe, col=r"$\sigma_{std}$")
+            g0 = sns.FacetGrid(dataframe, col=r"$\sigma_{std}$", sharex=False)
             g0.map_dataframe(
                 sns.scatterplot,
                 r"$E\left[d\right]$ in $m$",
@@ -141,9 +146,18 @@ def visualize_stats():
                 # ax.axis('equal')
         g0.add_legend()
         g0.tight_layout()
-        experiment = __args.path.split("/")[-1]
+        experiment = args.path.split("/")[-1]
         experiment = experiment.split(".")[0]
         g0.figure.canvas.manager.set_window_title(experiment)
+
+        if args.logx and args.logy:
+            g0.set(xscale="log", yscale="log")
+        elif args.logx and not args.logy:
+            g0.set(xscale="log")
+        elif not args.logx and args.logy:
+            g0.set(yscale="log")
+
+        # g0.set(xscale="log")
         plt.show()
 
 

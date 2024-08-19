@@ -38,6 +38,8 @@ dependencies = [
     "wget",
     "tqdm",
     "h5py",
+    "pyvista",
+    "derivative",
     "SciencePlots"
 ]
 
@@ -55,8 +57,7 @@ dev = ["anybadge",
        "pytest-mypy",
        "hatchling",
        "nox",
-       "pre-commit",
-       "memray"]
+       "pre-commit"]
 
 docs = [
   "sphinx>=7.0",

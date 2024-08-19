@@ -5,8 +5,7 @@ import timeit
 from typing import Any
 
 import numpy as np
-from pydmd.bopdmd import BOPDMD
-from pydmd.varprodmd import VarProDMD
+from pydmd import BOPDMD, VarProDMD
 from skimage.metrics import (  # pylint: disable=no-name-in-module
     structural_similarity as ssim,
 )

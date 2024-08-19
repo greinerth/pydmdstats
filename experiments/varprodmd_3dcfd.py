@@ -44,13 +44,13 @@ def test_3dcfd(
         raise ValueError(msg)
 
     n_train = int((1.0 - split) * time.shape[-1])
-
     for trial in range(data["Vx"].shape[0]):
         vx = data["Vx"][trial][..., None]
         vy = data["Vy"][trial][..., None]
         vz = data["Vz"][trial][..., None]
 
         current_data = np.concatenate([vx, vy, vz], axis=-1)
+        current_data = np.linalg.norm(current_data, axis=-1)
         dataflat = np.zeros((np.prod(current_data.shape[1:]), current_data.shape[0]))
 
         for i in range(current_data.shape[0]):
@@ -74,12 +74,12 @@ def test_3dcfd(
         vardmd.fit(dataflat[:, :n_train], time[:n_train])
         dtvar = timeit.default_timer() - t0
 
-        bopmrse = np.linalg.norm(dataflat - bopdmd.forecast(time), axis=0) / np.sqrt(
-            dataflat.shape[0]
-        )
-        varmrse = np.linalg.norm(dataflat - vardmd.forecast(time), axis=0) / np.sqrt(
-            dataflat.shape[0]
-        )
+        bopmrse = np.linalg.norm(
+            dataflat - bopdmd.forecast(time), axis=0
+        ) / np.linalg.norm(dataflat, axis=0)
+        varmrse = np.linalg.norm(
+            dataflat - vardmd.forecast(time), axis=0
+        ) / np.linalg.norm(dataflat, axis=0)
 
         yield (
             {
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     ax[0].add_patch(rect)
     ax[0].set_xlim(time[0], time[-1])
     ax[0].set_xlabel("t")
-    ax[0].set_ylabel("RMSE")
+    ax[0].set_ylabel("nRMSE")
     ax[0].legend()
     ax[0].grid()
     ax[1].violinplot([varrt, boprt], [1, 2], showmeans=True)
