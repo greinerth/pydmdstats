@@ -29,8 +29,7 @@ if __name__ == "__main__":
     vx = h5file["Vx"][0]
     vy = h5file["Vy"][0]
     vz = h5file["Vz"][0]
-    data = np.concatenate(
-        [vx[..., None], vy[..., None], vz[..., None]], axis=-1)
+    data = np.concatenate([vx[..., None], vy[..., None], vz[..., None]], axis=-1)
     msg = f"Data shape : {data.shape}"
     logging.info(msg)
 
@@ -42,7 +41,11 @@ if __name__ == "__main__":
     data = data[::4]
 
     vorts = compute_spectral_vorticity_np(
-        data, x_coords[1] - x_coords[0], y_coords[1] - y_coords[0], z_coords[1] - z_coords[0])
+        data,
+        x_coords[1] - x_coords[0],
+        y_coords[1] - y_coords[0],
+        z_coords[1] - z_coords[0],
+    )
     vorts = np.linalg.norm(vorts, axis=-1)
     # velocity = velocity[::4]
 
