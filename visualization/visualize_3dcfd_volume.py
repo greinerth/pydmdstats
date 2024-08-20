@@ -23,14 +23,18 @@ if __name__ == "__main__":
         / "data"
         / "3D"
         / "Train"
-        / "3D_CFD_Turb_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
+        / "3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
     )
     h5file = h5.File(str(file))
-    vx = h5file["Vx"][0]
-    vy = h5file["Vy"][0]
-    vz = h5file["Vz"][0]
+    rng = np.random.default_rng()
+    nsamples = h5file["Vx"].shape[0]
+    rnd_entry = int(rng.uniform() * nsamples)
+    vx = h5file["Vx"][rnd_entry]
+    vy = h5file["Vy"][rnd_entry]
+    vz = h5file["Vz"][rnd_entry]
+
     data = np.concatenate([vx[..., None], vy[..., None], vz[..., None]], axis=-1)
-    msg = f"Data shape : {data.shape}"
+    msg = f"Selected trajectory nr. {rnd_entry} - Data shape : {data.shape}"
     logging.info(msg)
 
     x_coords = np.array(h5file["x-coordinate"][:])
