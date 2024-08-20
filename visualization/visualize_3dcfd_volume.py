@@ -8,7 +8,7 @@ import h5py as h5
 import numpy as np
 import pyvista as pv
 import vtk  # noqa: F401
-from varprodmdstatspy import compute_vorticity
+from varprodmdstatspy import compute_spectral_vorticity_np
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 logging.root.setLevel(logging.INFO)
@@ -40,13 +40,7 @@ if __name__ == "__main__":
 
     data = data[::4]
 
-    vorts = [
-        compute_vorticity(
-            data[i], x_coords, y_coords, z_coords, kind="finite_difference", k=2
-        )[None]
-        for i in range(data.shape[0])
-    ]
-    vorts = np.concatenate(vorts, axis=0)
+    vorts = compute_spectral_vorticity_np(data)
     velocity = np.linalg.norm(vorts, axis=-1)
     # velocity = velocity[::4]
 

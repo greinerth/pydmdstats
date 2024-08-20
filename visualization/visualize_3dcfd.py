@@ -83,7 +83,7 @@ def densityplot3d(
 
 
 if __name__ == "__main__":
-    split = 0.4
+    split = 0.0
     currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
     file = (
         currentdir.parent

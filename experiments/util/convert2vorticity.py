@@ -5,9 +5,12 @@ import argparse
 from pathlib import Path
 
 import h5py as h5
+import jax.numpy as jnp
 import numpy as np
 from tqdm import tqdm
-from varprodmdstatspy import compute_vorticity
+from varprodmdstatspy import (
+    compute_spectral_vorticity_jnp,
+)
 
 
 def convert_velocity() -> None:
@@ -31,6 +34,9 @@ def convert_velocity() -> None:
     fname = args.data.split("/")[-1]
     fname = fname.split(".hdf5")[0]
     outpath = str(Path(args.data).parent / fname) + "_vorticity.hdf5"
+    dx = h5file["x-coordinate"][1] - h5file["x-coordinate"][0]
+    dy = h5file["y-coordinate"][1] - h5file["y-coordinate"][0]
+    dz = h5file["z-coordinate"][1] - h5file["z-coordinate"][0]
 
     if not Path(str(outpath)).exists():
         outfile = h5.File(str(outpath), "a")
@@ -83,19 +89,11 @@ def convert_velocity() -> None:
                 [vx[..., None], vy[..., None], vz[..., None]], axis=-1
             )
 
-            vorticity = np.concatenate(
-                [
-                    compute_vorticity(
-                        velocity[j], xcoords, ycoords, zcoords, kind="spectral"
-                    )[None]
-                    for j in range(velocity.shape[0])
-                ],
-                axis=0,
-            )
+            vorticity = compute_spectral_vorticity_jnp(jnp.array(velocity), dx, dy, dz)
 
-            outfile["omega_x"][i] = vorticity[..., 0]
-            outfile["omega_y"][i] = vorticity[..., 1]
-            outfile["omega_z"][i] = vorticity[..., 2]
+            outfile["omega_x"][i] = np.array(vorticity[..., 0])
+            outfile["omega_y"][i] = np.array(vorticity[..., 1])
+            outfile["omega_z"][i] = np.array(vorticity[..., 2])
 
 
 if __name__ == "__main__":

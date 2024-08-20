@@ -8,7 +8,7 @@ import argparse
 # import logging
 import timeit
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import h5py as h5
 import matplotlib.pyplot as plt
@@ -23,80 +23,74 @@ from tqdm import tqdm
 
 
 def test_3dcfd(
-    data: h5.File, time: np.ndarray, split: float = 0.3
-) -> Generator[dict[str, Any], dict[str, Any]]:
+    data: np.ndarray, time: np.ndarray, split: float = 0.3
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Test 3D CFD example
 
        Split data into training set and test model on unseen timesteps (extrapolation).
        In addition record the time required for optimization.
 
-    :param path2data: Path to dataset
+    :param data: Current trajectory of shape [n, sx, sy, sz, 3]
     :type path2data: str
     :param split: Splitting parameter to split data to training- and test set, defaults to 0.7
     :type split: float, optional
     :raises ValueError: If parameter `split` not in (0, 1)
-    :raises FileNotFoundError: If dataset cannot be found
+    :raises ValueError: If parameter `data` is not of shape [n, sy, sy, sz, 3]
     :return: List of results of each trial, time and number of training samples
-    :rtype: tuple[list[dict[str, Any]], np.ndarray, int]
+    :rtype: tuple[dict[str, Any], dict[str, Any]]
     """
     if not 0.0 < split < 1.0:
         msg = "'split' must lie in (0, 1)!"
         raise ValueError(msg)
 
+    if data.shape[-1] != 3 or data.ndim != 5:
+        msg = "Expected 5D array of shape [n, sx, sy, sz, 3]"
+        raise ValueError(msg)
+
     n_train = int((1.0 - split) * time.shape[-1])
-    for trial in range(data["Vx"].shape[0]):
-        vx = data["Vx"][trial][..., None]
-        vy = data["Vy"][trial][..., None]
-        vz = data["Vz"][trial][..., None]
+    dataflat = np.zeros((np.prod(data.shape[1:]), data.shape[0]))
 
-        current_data = np.concatenate([vx, vy, vz], axis=-1)
-        current_data = np.linalg.norm(current_data, axis=-1)
-        dataflat = np.zeros((np.prod(current_data.shape[1:]), current_data.shape[0]))
+    for i in range(data.shape[0]):
+        dataflat[:, i] = np.ravel(data[i, ...], "F")
 
-        for i in range(current_data.shape[0]):
-            dataflat[:, i] = np.ravel(current_data[i, ...], "F")
+    vardmd = VarProDMD(
+        optargs={
+            "method": "trf",
+            "tr_solver": "exact",
+            "loss": "linear",
+            "x_scale": "jac",
+        }
+    )
 
-        vardmd = VarProDMD(
-            optargs={
-                "method": "trf",
-                "tr_solver": "exact",
-                "loss": "linear",
-                "x_scale": "jac",
-            }
-        )
-        bopdmd = BOPDMD(trial_size=dataflat.shape[-1])
+    bopdmd = BOPDMD(trial_size=dataflat.shape[-1])
 
-        t0 = timeit.default_timer()
-        bopdmd.fit(dataflat[:, :n_train], time[:n_train])
-        dtbop = timeit.default_timer() - t0
+    t0 = timeit.default_timer()
+    bopdmd.fit(dataflat[:, :n_train], time[:n_train])
+    dtbop = timeit.default_timer() - t0
 
-        t0 = timeit.default_timer()
-        vardmd.fit(dataflat[:, :n_train], time[:n_train])
-        dtvar = timeit.default_timer() - t0
+    t0 = timeit.default_timer()
+    vardmd.fit(dataflat[:, :n_train], time[:n_train])
+    dtvar = timeit.default_timer() - t0
 
-        bopmrse = np.linalg.norm(
-            dataflat - bopdmd.forecast(time), axis=0
-        ) / np.linalg.norm(dataflat, axis=0)
-        varmrse = np.linalg.norm(
-            dataflat - vardmd.forecast(time), axis=0
-        ) / np.linalg.norm(dataflat, axis=0)
+    bopmrse = np.linalg.norm(dataflat - bopdmd.forecast(time), axis=0) / np.linalg.norm(
+        dataflat, axis=0
+    )
+    varmrse = np.linalg.norm(dataflat - vardmd.forecast(time), axis=0) / np.linalg.norm(
+        dataflat, axis=0
+    )
 
-        yield (
-            {
-                "method": "BOPDMD",
-                "run": trial,
-                "dt": dtbop,
-                "mrse": bopmrse,
-                "eigs": bopdmd.eigs,
-            },
-            {
-                "method": "VarPorDMD",
-                "run": trial,
-                "dt": dtvar,
-                "mrse": varmrse,
-                "eigs": vardmd.eigs,
-            },
-        )
+    return (
+        {
+            "method": "BOPDMD",
+            "dt": dtbop,
+            "mrse": bopmrse,
+        },
+        {
+            "method": "VarPorDMD",
+            "dt": dtvar,
+            "mrse": varmrse,
+        },
+    )
 
 
 if __name__ == "__main__":
@@ -129,7 +123,7 @@ if __name__ == "__main__":
     h5file = h5.File(str(args.data), "r")
 
     time = h5file["t-coordinate"][:-1].astype(np.float64)
-    n_samples = h5file["Vx"].shape[0]
+    n_samples = h5file["omega_x"].shape[0]
 
     fig, ax = plt.subplots(1, 2)
     varrt = np.zeros((n_samples,))
@@ -141,9 +135,15 @@ if __name__ == "__main__":
     var_hat_varprodmd = np.zeros_like(varprodmd_mean_mrse)
     var_hat_bopdmd = np.zeros_like(bopdmd_mean_mrse)
 
-    for run, (bopdmd, vardmd) in tqdm(
-        enumerate(test_3dcfd(h5file, time, args.split)), total=n_samples
-    ):
+    for run in tqdm(range(n_samples)):
+        omega_x = h5file["omega_x"][run][:]
+        omega_y = h5file["omega_y"][run][:]
+        omega_z = h5file["omega_z"][run][:]
+        data_in = np.concatenate(
+            [omega_x[..., None], omega_y[..., None], omega_z[..., None]], axis=-1
+        )
+        bopdmd, vardmd = test_3dcfd(data_in, time, args.split)
+
         # calculate running average and variance
         delta_bopdmd = bopdmd["mrse"] - bopdmd_mean_mrse
         delta_vardmd = vardmd["mrse"] - varprodmd_mean_mrse

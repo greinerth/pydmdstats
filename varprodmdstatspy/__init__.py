@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ._version import version as __version__
-from .util import vorticity
+from .util import experiment_utils, stats, vorticity
 from .util.experiment_utils import (
     comp_checker,
     dmd_stats,
@@ -12,11 +12,14 @@ from .util.experiment_utils import (
     std_checker,
 )
 from .util.stats import runtime_stats
-from .util.vorticity import compute_vorticity
+from .util.vorticity import (
+    compute_spectral_vorticity_jnp,
+    compute_spectral_vorticity_np,
+)
 
 __all__ = [
     "__version__",
-    "util" "experiment_utils",
+    "experiment_utils",
     "stats",
     "vorticity",
     "comp_checker",
@@ -27,5 +30,6 @@ __all__ = [
     "ssim_multi_images",
     "std_checker",
     "runtime_stats",
-    "compute_vorticity",
+    "compute_spectral_vorticity_np",
+    "compute_spectral_vorticity_jnp",
 ]
