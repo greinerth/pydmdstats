@@ -29,7 +29,8 @@ if __name__ == "__main__":
     vx = h5file["Vx"][0]
     vy = h5file["Vy"][0]
     vz = h5file["Vz"][0]
-    data = np.concatenate([vx[..., None], vy[..., None], vz[..., None]], axis=-1)
+    data = np.concatenate(
+        [vx[..., None], vy[..., None], vz[..., None]], axis=-1)
     msg = f"Data shape : {data.shape}"
     logging.info(msg)
 
@@ -40,22 +41,23 @@ if __name__ == "__main__":
 
     data = data[::4]
 
-    vorts = compute_spectral_vorticity_np(data)
-    velocity = np.linalg.norm(vorts, axis=-1)
+    vorts = compute_spectral_vorticity_np(
+        data, x_coords[1] - x_coords[0], y_coords[1] - y_coords[0], z_coords[1] - z_coords[0])
+    vorts = np.linalg.norm(vorts, axis=-1)
     # velocity = velocity[::4]
 
-    vmin, vmax = velocity.min(), velocity.max()
+    vmin, vmax = vorts.min(), vorts.max()
 
-    n_rows = int(np.floor(velocity.shape[0] / np.sqrt(velocity.shape[0])))
-    n_cols = int(np.ceil(velocity.shape[0] / n_rows))
+    n_rows = int(np.floor(vorts.shape[0] / np.sqrt(vorts.shape[0])))
+    n_cols = int(np.ceil(vorts.shape[0] / n_rows))
 
     plotter = pv.Plotter(shape=(n_rows, n_cols), border=False)
-    for i in range(velocity.shape[0]):
+    for i in range(vorts.shape[0]):
         row = i // n_cols
         col = i % n_cols
         plotter.subplot(row, col)
         plotter.add_volume(
-            velocity[i],
+            vorts[i],
             cmap="magma",
             clim=(vmin, vmax),
             show_scalar_bar=False,
@@ -72,7 +74,7 @@ if __name__ == "__main__":
         "n_labels": 3,
         "fmt": "%.2f",
     }
-    plotter.add_scalar_bar("Velocity [m/s]", **sargs)
+    plotter.add_scalar_bar("Vorticity", **sargs)
     plotter.link_views()
     plotter.window_size = [1200, 531]
     plotter.show()
