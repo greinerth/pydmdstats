@@ -140,9 +140,9 @@ if __name__ == "__main__":
     h5file = h5.File(str(args.data), "r")
 
     time = h5file["t-coordinate"][:-1].astype(np.float64)
-    n_samples = h5file["omega_x"].shape[0]
+    n_samples = 10  # h5file["omega_x"].shape[0]
 
-    fig, ax = plt.subplots(1, 2)
+    fig, ax = plt.subplots(1, 2, layout="constrained")
     varrt = np.zeros((n_samples,))
     boprt = np.zeros((n_samples,))
 
@@ -202,11 +202,13 @@ if __name__ == "__main__":
     ax[0].set_xlim(time[0], time[-1])
     ax[0].set_xlabel("t")
     ax[0].set_ylabel("nRMSE")
+    ax[0].set_title("a) Extrapolation", loc="left", fontsize=8)
     ax[0].legend()
     ax[0].grid()
     ax[1].violinplot([varrt, boprt], [1, 2], showmeans=True)
     ax[1].set_xticks([1, 2], labels=["VarProDMD", "BOPDMD"])
     ax[1].set_ylabel("t")
+    ax[1].set_title("b) Runtimes", loc="left", fontsize=8)
     ax[1].grid()
     fig.set_size_inches(width / dpi, height / dpi)
     plt.show()

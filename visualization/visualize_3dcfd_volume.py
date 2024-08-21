@@ -28,7 +28,7 @@ if __name__ == "__main__":
     h5file = h5.File(str(file))
     # rng = np.random.default_rng()
     nsamples = h5file["Vx"].shape[0]
-    nsteps = 4
+    nsteps = 2
     rnd_entry = 95  # int(rng.uniform() * nsamples)
     vx = h5file["Vx"][rnd_entry]
     vy = h5file["Vy"][rnd_entry]
@@ -84,6 +84,6 @@ if __name__ == "__main__":
     }
     plotter.add_scalar_bar("Vorticity", **sargs)
     plotter.link_views()
-    plotter.window_size = [1200, 531]
-    plotter.show()
-    # plotter.save_graphic("3dcfd.pdf")
+    plotter.window_size = [1400, 600]
+    # plotter.show()
+    plotter.save_graphic("3dcfd.pdf")

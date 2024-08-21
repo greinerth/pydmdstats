@@ -241,7 +241,7 @@ def visualize_stats():
                         )
                     )
 
-                # no correspondence between runtim and error, but mainly runtime is deviating
+                # no correspondence between runtime and error, but mainly runtime is deviating
                 elif (
                     np.isclose(c_xy, 0.0)
                     and np.isclose(c_xx, 0.0)
