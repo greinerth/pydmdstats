@@ -23,7 +23,7 @@ from tqdm import tqdm
 
 
 def test_3dcfd(
-    data: np.ndarray, time: np.ndarray, split: float = 0.3
+    data: np.ndarray, time: np.ndarray, split: float = 0.3, compression: float = 0.0
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Test 3D CFD example
 
@@ -34,6 +34,9 @@ def test_3dcfd(
     :type path2data: str
     :param split: Splitting parameter to split data to training- and test set, defaults to 0.7
     :type split: float, optional
+    :param compression: Compression for VarProDMD.
+        If `compression=0` no compression is performed, defaults to 0.0
+    :type compression: float, optional
     :raises ValueError: If parameter `split` not in (0, 1)
     :raises ValueError: If parameter `data` is not of shape [n, sy, sy, sz, 3]
     :return: List of results of each trial, time and number of training samples
@@ -59,7 +62,8 @@ def test_3dcfd(
             "tr_solver": "exact",
             "loss": "linear",
             "x_scale": "jac",
-        }
+        },
+        compression=abs(compression),
     )
 
     bopdmd = BOPDMD(trial_size=dataflat.shape[-1])
@@ -94,6 +98,11 @@ def test_3dcfd(
 
 
 if __name__ == "__main__":
+    height = 531.0
+    width = 1200
+    dpi = 300
+
+    plt.rcParams["figure.dpi"] = dpi
     plt.style.use("science")
     parser = argparse.ArgumentParser(
         description="Perform experiments on 3D Fluid Dynamics dataset provided by pdebench repository."
@@ -105,6 +114,14 @@ if __name__ == "__main__":
         default=0.3,
         dest="split",
         help="<Optional> Split a recorded trajectory for training and extraplotation. [Default: 0.3]",
+    )
+    parser.add_argument(
+        "-c",
+        "--compression",
+        type=float,
+        default=0.0,
+        dest="compression",
+        help="<Optional> Compression for VarProDMD. If set to 0, VarProDMD will not perform compression. [Default: 0.0]",
     )
     parser.add_argument(
         "-d",
@@ -142,7 +159,7 @@ if __name__ == "__main__":
         data_in = np.concatenate(
             [omega_x[..., None], omega_y[..., None], omega_z[..., None]], axis=-1
         )
-        bopdmd, vardmd = test_3dcfd(data_in, time, args.split)
+        bopdmd, vardmd = test_3dcfd(data_in, time, args.split, args.compression)
 
         # calculate running average and variance
         delta_bopdmd = bopdmd["mrse"] - bopdmd_mean_mrse
@@ -191,4 +208,5 @@ if __name__ == "__main__":
     ax[1].set_xticks([1, 2], labels=["VarProDMD", "BOPDMD"])
     ax[1].set_ylabel("t")
     ax[1].grid()
+    fig.set_size_inches(width / dpi, height / dpi)
     plt.show()

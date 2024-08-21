@@ -59,6 +59,7 @@ dev = ["anybadge",
        "pytest-coverage",
        "pytest-mypy",
        "hatchling",
+       "scikit-image",
        "nox",
        "pre-commit"]
 

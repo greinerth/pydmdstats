@@ -16,7 +16,7 @@
   "runArgs": ["--gpus", "all"],
   // Use 'postCreateCommand' to run commands after the container is created.
 
-  "postCreateCommand": "pip3 install --user -e .[dev,test,experiment,cuda] && sudo apt update && sudo apt upgrade -y && sudo apt install texlive-xetex cm-super dvipng -y",
+  "postCreateCommand": "pip3 install --user -e .[dev,test,experiments,cuda] && sudo apt update && sudo apt upgrade -y && sudo apt install texlive-xetex cm-super dvipng -y",
 
   "customizations": {
     "vscode": {

@@ -26,9 +26,10 @@ if __name__ == "__main__":
         / "3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
     )
     h5file = h5.File(str(file))
-    rng = np.random.default_rng()
+    # rng = np.random.default_rng()
     nsamples = h5file["Vx"].shape[0]
-    rnd_entry = int(rng.uniform() * nsamples)
+    nsteps = 4
+    rnd_entry = 95  # int(rng.uniform() * nsamples)
     vx = h5file["Vx"][rnd_entry]
     vy = h5file["Vy"][rnd_entry]
     vz = h5file["Vz"][rnd_entry]
@@ -42,10 +43,10 @@ if __name__ == "__main__":
     z_coords = np.array(h5file["z-coordinate"][:])
     time = np.array(h5file["t-coordinate"][:-1])
 
-    data = data[::4]
+    new_data = data[::nsteps]
 
     vorts = compute_spectral_vorticity_np(
-        data,
+        new_data,
         x_coords[1] - x_coords[0],
         y_coords[1] - y_coords[0],
         z_coords[1] - z_coords[0],
@@ -70,7 +71,7 @@ if __name__ == "__main__":
             show_scalar_bar=False,
             opacity="linear",
         )
-        time = r"$t_{" + rf"{i * n_cols + 1}" + r"}$"
+        time = r"$t_{" + rf"{i * nsteps + 1}" + r"}$"
         plotter.add_text(time, font_size=8, position="upper_edge")
 
     sargs = {
