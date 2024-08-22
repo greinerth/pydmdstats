@@ -72,23 +72,27 @@ def test_3dcfd(
     vardmd.fit(dataflat[:, :n_train], time[:n_train])
     dtvar = timeit.default_timer() - t0
 
-    bopmrse = np.linalg.norm(dataflat - bopdmd.forecast(time), axis=0) / np.linalg.norm(
-        dataflat, axis=0
+    bopnmrse = (
+        np.linalg.norm(dataflat - bopdmd.forecast(time), axis=0)
+        / np.sqrt(dataflat.shape[0])
+        / np.std(dataflat, axis=0)
     )
-    varmrse = np.linalg.norm(dataflat - vardmd.forecast(time), axis=0) / np.linalg.norm(
-        dataflat, axis=0
+    varnmrse = (
+        np.linalg.norm(dataflat - vardmd.forecast(time), axis=0)
+        / np.sqrt(dataflat.shape[0])
+        / np.std(dataflat, axis=0)
     )
 
     return (
         {
             "method": "BOPDMD",
             "dt": dtbop,
-            "mrse": bopmrse,
+            "nmrse": bopnmrse,
         },
         {
             "method": "VarPorDMD",
             "dt": dtvar,
-            "mrse": varmrse,
+            "nmrse": varnmrse,
         },
     )
 
@@ -145,12 +149,12 @@ if __name__ == "__main__":
         bopdmd, vardmd = test_3dcfd(data_in, time, args.split)
 
         # calculate running average and variance
-        delta_bopdmd = bopdmd["mrse"] - bopdmd_mean_mrse
-        delta_vardmd = vardmd["mrse"] - varprodmd_mean_mrse
+        delta_bopdmd = bopdmd["nmrse"] - bopdmd_mean_mrse
+        delta_vardmd = vardmd["nmrse"] - varprodmd_mean_mrse
         bopdmd_mean_mrse += delta_bopdmd / float(run + 1)
         varprodmd_mean_mrse += delta_vardmd / float(run + 1)
-        var_hat_bopdmd += (bopdmd["mrse"] - bopdmd_mean_mrse) * delta_bopdmd
-        var_hat_varprodmd += (vardmd["mrse"] - varprodmd_mean_mrse) * delta_vardmd
+        var_hat_bopdmd += (bopdmd["nmrse"] - bopdmd_mean_mrse) * delta_bopdmd
+        var_hat_varprodmd += (vardmd["nmrse"] - varprodmd_mean_mrse) * delta_vardmd
         varrt[run] = vardmd["dt"]
         boprt[run] = bopdmd["dt"]
 
