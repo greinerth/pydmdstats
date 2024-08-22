@@ -23,7 +23,11 @@ from tqdm import tqdm
 
 
 def test_3dcfd(
-    data: np.ndarray, time: np.ndarray, split: float = 0.3, compression: float = 0.0
+    data: np.ndarray,
+    time: np.ndarray,
+    split: float = 0.3,
+    compression: float = 0.0,
+    loss: str = "linear",
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Test 3D CFD example
 
@@ -37,6 +41,7 @@ def test_3dcfd(
     :param compression: Compression for VarProDMD.
         If `compression=0` no compression is performed, defaults to 0.0
     :type compression: float, optional
+    :param loss: Loss for VarProDMD. Can be "linear", "huber", "soft_l1", "cauchy", "arctan"
     :raises ValueError: If parameter `split` not in (0, 1)
     :raises ValueError: If parameter `data` is not of shape [n, sy, sy, sz, 3]
     :return: List of results of each trial, time and number of training samples
@@ -60,13 +65,13 @@ def test_3dcfd(
         optargs={
             "method": "trf",
             "tr_solver": "exact",
-            "loss": "linear",
+            "loss": loss,
             "x_scale": "jac",
         },
         compression=abs(compression),
     )
 
-    bopdmd = BOPDMD(trial_size=dataflat.shape[-1])
+    bopdmd = BOPDMD(trial_size=n_train)
 
     t0 = timeit.default_timer()
     bopdmd.fit(dataflat[:, :n_train], time[:n_train])
@@ -120,6 +125,14 @@ if __name__ == "__main__":
         help="<Optional> Split a recorded trajectory for training and extraplotation. [Default: 0.3]",
     )
     parser.add_argument(
+        "-n",
+        "--ntrials",
+        type=int,
+        default=-1,
+        dest="ntrials",
+        help="<Optional> Specify the number of experinemts to run. If negative all experiments are used. [Default: -1]",
+    )
+    parser.add_argument(
         "-c",
         "--compression",
         type=float,
@@ -135,6 +148,16 @@ if __name__ == "__main__":
         dest="data",
         help="<Required> Specify path to .hdf5 data file",
     )
+    lh = ",".join(['"linear"', '"soft_l1"', '"huber"', '"cauchy"', '"arctan"'])
+    lh = " ".join(
+        [
+            rf"<Optional> Specify the loss (e.g. {lh}) for robust regression.",
+            '[Default: "linear"]',
+        ]
+    )
+    parser.add_argument(
+        "-l", "--loss", type=str, dest="loss", default="linear", help=lh
+    )
     args = parser.parse_args()
 
     if not Path(args.data).exists():
@@ -144,7 +167,11 @@ if __name__ == "__main__":
     h5file = h5.File(str(args.data), "r")
 
     time = h5file["t-coordinate"][:-1].astype(np.float64)
-    n_samples = h5file["omega_x"].shape[0]
+    n_samples = (
+        h5file["omega_x"].shape[0]
+        if args.ntrials <= 0
+        else min(args.ntrials, h5file["omega_x"].shape[0])
+    )
 
     fig, ax = plt.subplots(1, 2, layout="constrained")
     varrt = np.zeros((n_samples,))
@@ -163,7 +190,9 @@ if __name__ == "__main__":
         data_in = np.concatenate(
             [omega_x[..., None], omega_y[..., None], omega_z[..., None]], axis=-1
         )
-        bopdmd, vardmd = test_3dcfd(data_in, time, args.split, args.compression)
+        bopdmd, vardmd = test_3dcfd(
+            data_in, time, args.split, args.compression, args.loss
+        )
 
         # calculate running average and variance
         delta_bopdmd = bopdmd["nmrse"] - bopdmd_mean_mrse

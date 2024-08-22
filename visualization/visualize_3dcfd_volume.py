@@ -8,7 +8,7 @@ import h5py as h5
 import numpy as np
 import pyvista as pv
 import vtk  # noqa: F401
-from varprodmdstatspy import compute_spectral_vorticity_np
+from varprodmdstatspy import compute_spectral_vorticity_jnp
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 logging.root.setLevel(logging.INFO)
@@ -30,6 +30,7 @@ if __name__ == "__main__":
     nsamples = h5file["Vx"].shape[0]
     nsteps = 2
     rnd_entry = 95  # int(rng.uniform() * nsamples)
+    # rnd_entry = int(rng.uniform() * nsamples)
     vx = h5file["Vx"][rnd_entry]
     vy = h5file["Vy"][rnd_entry]
     vz = h5file["Vz"][rnd_entry]
@@ -45,12 +46,13 @@ if __name__ == "__main__":
 
     new_data = data[::nsteps]
 
-    vorts = compute_spectral_vorticity_np(
+    vorts = compute_spectral_vorticity_jnp(
         new_data,
         x_coords[1] - x_coords[0],
         y_coords[1] - y_coords[0],
         z_coords[1] - z_coords[0],
     )
+
     vorts = np.linalg.norm(vorts, axis=-1)
     # velocity = velocity[::4]
 
@@ -85,5 +87,5 @@ if __name__ == "__main__":
     plotter.add_scalar_bar("Vorticity", **sargs)
     plotter.link_views()
     plotter.window_size = [1400, 600]
-    # plotter.show()
-    plotter.save_graphic("3dcfd.pdf")
+    plotter.show()
+    # plotter.save_graphic("3dcfd.pdf")

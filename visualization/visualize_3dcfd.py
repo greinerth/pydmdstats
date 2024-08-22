@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scienceplots  # noqa: F401
 from pydmd import BOPDMD, VarProDMD
+from varprodmdstatspy import compute_spectral_vorticity_jnp
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
 logging.root.setLevel(logging.INFO)
@@ -94,10 +95,11 @@ if __name__ == "__main__":
         / "3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5"
     )
     h5file = h5.File(str(file))
-    vx = h5file["Vx"][32]
-    vy = h5file["Vy"][32]
-    vz = h5file["Vz"][32]
+    vx = h5file["Vx"][95]
+    vy = h5file["Vy"][95]
+    vz = h5file["Vz"][95]
     data = np.concatenate([vx[..., None], vy[..., None], vz[..., None]], axis=-1)
+
     msg = f"Data shape : {data.shape}"
     logging.info(msg)
 
@@ -107,6 +109,12 @@ if __name__ == "__main__":
     time = np.array(h5file["t-coordinate"][:-1])
     n_train = int((1.0 - split) * time.shape[-1])
 
+    data = compute_spectral_vorticity_jnp(
+        data,
+        x_coords[1] - x_coords[0],
+        y_coords[1] - y_coords[0],
+        z_coords[1] - z_coords[0],
+    )
     # np.meshgrid(x_coords, y_coords, z_coords)
     x_coords, y_coords, z_coords = np.meshgrid(x_coords, y_coords, z_coords)
     dataflat = np.zeros((np.prod(data.shape[1:]), data.shape[0]))
@@ -138,15 +146,17 @@ if __name__ == "__main__":
     mrse_vardmd = (
         np.linalg.norm(dataflat - vardmd.forecast(time).real, axis=0)
         / np.sqrt(dataflat.shape[0])
+        / np.std(dataflat, axis=0)
     ).mean()
     mrse_bopdmd = (
         np.linalg.norm(dataflat - bopdmd.forecast(time).real, axis=0)
         / np.sqrt(dataflat.shape[0])
+        / np.std(dataflat, axis=0)
     ).mean()
 
-    msg = f"VarProDMD-RMSE: {mrse_vardmd:.4f}"
+    msg = f"VarProDMD-nRMSE: {mrse_vardmd:.4f}"
     logging.info(msg)
-    msg = f"BOPDMD-RMSE: {mrse_bopdmd:.4f}"
+    msg = f"BOPDMD-nRMSE: {mrse_bopdmd:.4f}"
     logging.info(msg)
 
     n_rows = int(np.floor(vardmd.modes.shape[-1] / np.sqrt(vardmd.modes.shape[-1])))
@@ -170,7 +180,7 @@ if __name__ == "__main__":
             marker="s",
             decay=5.0,
         )
-        axvar_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
+        # axvar_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
 
     figvar.suptitle("VarProDMD")
 
@@ -198,7 +208,7 @@ if __name__ == "__main__":
             marker="s",
             decay=5.0,
         )
-        axbop_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
+        # axbop_flat[i].set_title(r"$\boldsymbol{\Phi}_{" + rf"{i + 1}" + r"}$")
 
     figbop.suptitle("BOPDMD")
 
