@@ -106,7 +106,7 @@ def test_3dcfd(
     )
 
 
-if __name__ == "__main__":
+def run_3dcfd() -> None:
     # height = 531.0
     # width = 1200
     dpi = 300
@@ -245,3 +245,7 @@ if __name__ == "__main__":
     ax[1].grid()
     # fig.set_size_inches(width / dpi, height / dpi)
     plt.show()
+
+
+if __name__ == "__main__":
+    run_3dcfd()
