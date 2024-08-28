@@ -1,25 +1,19 @@
 """
-Conduct 3d fluid dynamic example taken from pdebench data
+Conduct 3D fluid dynamic example taken from pdebench data
 """
 from __future__ import annotations
 
 import argparse
-
-# import logging
+import inspect
+import pickle
 import timeit
 from pathlib import Path
 from typing import Any
 
 import h5py as h5
-import matplotlib.pyplot as plt
 import numpy as np
-import scienceplots  # noqa: F401
-from matplotlib.patches import Rectangle
 from pydmd import BOPDMD, VarProDMD
 from tqdm import tqdm
-
-# logging.basicConfig(level=logging.INFO, filename=__name__)
-# logging.root.setLevel(logging.INFO)
 
 
 def test_3dcfd(
@@ -107,12 +101,13 @@ def test_3dcfd(
 
 
 def run_3dcfd() -> None:
-    # height = 531.0
-    # width = 1200
-    dpi = 300
+    """Run 3DCFD experiment
 
-    plt.rcParams["figure.dpi"] = dpi
-    plt.style.use("science")
+    :raises FileNotFoundError: If path to dataset specified within the argparser
+        does not exist.
+    """
+    currentdir = Path(inspect.getfile(inspect.currentframe())).resolve().parent
+    outdir = currentdir / "output"
     parser = argparse.ArgumentParser(
         description="Perform experiments on 3D Fluid Dynamics dataset provided by pdebench repository."
     )
@@ -148,6 +143,14 @@ def run_3dcfd() -> None:
         dest="data",
         help="<Required> Specify path to .hdf5 data file",
     )
+    parser.add_argument(
+        "-o",
+        "--out",
+        type=str,
+        default=outdir,
+        dest="out",
+        help=f"Output Directory. [Defaults: {outdir}]",
+    )
     lh = ",".join(['"linear"', '"soft_l1"', '"huber"', '"cauchy"', '"arctan"'])
     lh = " ".join(
         [
@@ -173,15 +176,14 @@ def run_3dcfd() -> None:
         else min(args.ntrials, h5file["omega_x"].shape[0])
     )
 
-    fig, ax = plt.subplots(1, 2, layout="constrained")
     varrt = np.zeros((n_samples,))
     boprt = np.zeros((n_samples,))
 
-    varprodmd_mean_mrse = np.zeros_like(time)
-    bopdmd_mean_mrse = np.zeros_like(varprodmd_mean_mrse)
+    varprodmd_mean_nrmse = np.zeros_like(time)
+    bopdmd_mean_nrmse = np.zeros_like(varprodmd_mean_nrmse)
 
-    var_hat_varprodmd = np.zeros_like(varprodmd_mean_mrse)
-    var_hat_bopdmd = np.zeros_like(bopdmd_mean_mrse)
+    var_hat_varprodmd = np.zeros_like(varprodmd_mean_nrmse)
+    var_hat_bopdmd = np.zeros_like(bopdmd_mean_nrmse)
 
     for run in tqdm(range(n_samples)):
         omega_x = h5file["omega_x"][run][:]
@@ -195,56 +197,44 @@ def run_3dcfd() -> None:
         )
 
         # calculate running average and variance
-        delta_bopdmd = bopdmd["nmrse"] - bopdmd_mean_mrse
-        delta_vardmd = vardmd["nmrse"] - varprodmd_mean_mrse
-        bopdmd_mean_mrse += delta_bopdmd / float(run + 1)
-        varprodmd_mean_mrse += delta_vardmd / float(run + 1)
-        var_hat_bopdmd += (bopdmd["nmrse"] - bopdmd_mean_mrse) * delta_bopdmd
-        var_hat_varprodmd += (vardmd["nmrse"] - varprodmd_mean_mrse) * delta_vardmd
+        delta_bopdmd = bopdmd["nmrse"] - bopdmd_mean_nrmse
+        delta_vardmd = vardmd["nmrse"] - varprodmd_mean_nrmse
+        bopdmd_mean_nrmse += delta_bopdmd / float(run + 1)
+        varprodmd_mean_nrmse += delta_vardmd / float(run + 1)
+        var_hat_bopdmd += (bopdmd["nmrse"] - bopdmd_mean_nrmse) * delta_bopdmd
+        var_hat_varprodmd += (vardmd["nmrse"] - varprodmd_mean_nrmse) * delta_vardmd
         varrt[run] = vardmd["dt"]
         boprt[run] = bopdmd["dt"]
 
     std_varprodmd = np.sqrt(var_hat_varprodmd / float(n_samples - 1))
     std_bopdmd = np.sqrt(var_hat_bopdmd / float(n_samples - 1))
 
-    # plot expected errors and 95 % confidence interval
-    ax[0].plot(time, bopdmd_mean_mrse, color="r", label="BOPDMD")
-    ax[0].plot(time, varprodmd_mean_mrse, "--", color="b", label="VarProDMD")
-    ax[0].fill_between(
-        time,
-        bopdmd_mean_mrse - 1.96 * std_bopdmd,
-        bopdmd_mean_mrse + 1.96 * std_bopdmd,
-        alpha=0.2,
-        color="r",
+    data_out = {
+        "time": time,
+        "mean-nRMSE-VarProDMD": varprodmd_mean_nrmse,
+        "mean-nRMSE-BOPDMD": bopdmd_mean_nrmse,
+        "std-nRMSE-VarProDMD": std_varprodmd,
+        "std-nRMSE-BOPDMD": std_bopdmd,
+        "dt-VarProDMD": varrt,
+        "dt-BOPDMD": boprt,
+    }
+
+    out_path = Path(args.out) / "trf"
+    fname = args.data.split("/")[-1]
+    fname = fname.split(".hdf5")[0]
+    out_path = out_path / fname
+
+    if not Path(out_path).exists():
+        Path(out_path).mkdir(parents=True)
+
+    file_out = (
+        out_path
+        / f"nRMSE_{n_samples}_runs_{args.split}_split_{
+        args.compression}_comp.pkl"
     )
-    ax[0].fill_between(
-        time,
-        varprodmd_mean_mrse - 1.96 * std_varprodmd,
-        varprodmd_mean_mrse + 1.96 * std_varprodmd,
-        alpha=0.2,
-        color="b",
-    )
-    rect = Rectangle(
-        (0, ax[0].get_ylim()[0]),
-        time[int((1.0 - args.split) * time.shape[-1])],
-        np.subtract(*ax[0].get_ylim()[::-1]),
-        facecolor="grey",
-        alpha=0.4,
-    )
-    ax[0].add_patch(rect)
-    ax[0].set_xlim(time[0], time[-1])
-    ax[0].set_xlabel("t")
-    ax[0].set_ylabel("nRMSE")
-    ax[0].set_title("a) Extrapolation", loc="left", fontsize=8)
-    ax[0].legend()
-    ax[0].grid()
-    ax[1].violinplot([varrt, boprt], [1, 2], showmeans=True)
-    ax[1].set_xticks([1, 2], labels=["VarProDMD", "BOPDMD"])
-    ax[1].set_ylabel("t")
-    ax[1].set_title("b) Runtimes", loc="left", fontsize=8)
-    ax[1].grid()
-    # fig.set_size_inches(width / dpi, height / dpi)
-    plt.show()
+
+    with Path(file_out).open("wb") as handle:
+        pickle.dump(data_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
