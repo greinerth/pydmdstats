@@ -227,11 +227,10 @@ def run_3dcfd() -> None:
     if not Path(out_path).exists():
         Path(out_path).mkdir(parents=True)
 
-    file_out = (
-        out_path
-        / f"nRMSE_{n_samples}_runs_{args.split}_split_{
-        args.compression}_comp.pkl"
-    )
+    split = args.split
+    comp = args.compression
+
+    file_out = out_path / f"nRMSE_{n_samples}_runs_{split}_split_{comp}_comp.pkl"
 
     with Path(file_out).open("wb") as handle:
         pickle.dump(data_out, handle, protocol=pickle.HIGHEST_PROTOCOL)
