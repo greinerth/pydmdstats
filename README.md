@@ -195,21 +195,29 @@ The 3D Vorticity experiment relies on a dataset provided by
 [PDEBench](https://github.com/pdebench/PDEBench). Within this experiment we
 investigate the extrapolation capability on a very high-dimensional problem.
 Each trial of the dataset (100 recordings in total) consists of a trajectory of
-dimension of $21 \times 128 \times 128 \times 128 \times 3$.
+dimension of $21 \times 128 \times 128 \times 128 \times 3$. Inspect
+`visualization/visualize_3dcfd_volume.py` for replicating the following figure.
+You might need to run the script on your host OS.
+[PyVista](https://github.com/pyvista) is used for rendering the vorticity
+fields; it requires additional drivers, which are currently not supported within
+the devcontainer.
 
 |    ![3dcfd_vorticity](./figures/3dcfd_vorticity_example_2.png)    |
 | :---------------------------------------------------------------: |
 | _3D Vorticity experiment: 3D Vorticity field evolving over time._ |
 
-To download the datasets execute
+#### Prerequisites
 
-```
-pdebench_dl --pde_name 3d_cfd
-```
+Ensure that jax with cuda is installed. Either install manually
+`pip install -jax[cuda12]` or just install the the package with optional
+dependency `pip install --user -e .[cuda]`
 
-This will download different and store large datasets (>200GB) in the
-`experiments` folder. Please ensure you have enough space on your machine.\
+Download the datasets execute`pdebench_dl --pde_name 3d_cfd` This will download
+different and store large datasets (>200GB) in the `experiments` folder. Please
+ensure you have enough space on your machine.\
 After the download you should see additional folder structure `experiments/data/3D/Train`.
+
+#### Conversion to vorticity
 
 Now the data needs to be converted from velocity $\boldsymbol{v}$ to vorticity
 $\boldsymbol{\omega}: v \rightarrow \boldsymbol{\omega}$.
@@ -252,7 +260,11 @@ velocity2vorticity -d experiments/3D/Train/3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_p
 
 Now an additional file
 `3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train_vorticity.hdf5`\
-should appear. To replicate the experiment run
+should appear.
+
+#### Run the experiment
+
+To replicate the experiment run
 
 ```
 run_3dcfd -d experiments/3D/Train/3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5 -s 0.5
