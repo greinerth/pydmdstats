@@ -30,7 +30,8 @@ dependencies = [
     "numpy>=1.21.4",
     "pydmd",
     "jax",
-    "SciencePlots"
+    "SciencePlots",
+    "scikit-image"
 ]
 
 [project.optional-dependencies]
@@ -59,7 +60,6 @@ dev = ["anybadge",
        "pytest-coverage",
        "pytest-mypy",
        "hatchling",
-       "scikit-image",
        "nox",
        "pre-commit"]
 
