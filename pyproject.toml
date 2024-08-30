@@ -28,32 +28,31 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.21.4",
-    "scipy>=1.9.3",
-    "sympy>=1.8",
     "pydmd",
-    "scikit-image",
-    "seaborn",
-    "netCDF4",
-    "colorama",
-    "wget",
-    "SciencePlots"
+    "jax",
+    "jaxlib",
+    "SciencePlots",
+    "scikit-image"
 ]
-
-[tool.hatch]
-version.source = "vcs"
-build.hooks.vcs.version-file = "varprodmdstatspy/_version.py"
-build.include = [
-"varprodmdstatspy",
-  "experiments",
-  "visualization"
-]
-
 
 [project.optional-dependencies]
 test = [
   "pytest >=6",
   "pytest-cov >=3",
   "nox"
+]
+
+experiments = [
+  "seaborn",
+  "netCDF4",
+  "wget",
+  "tqdm",
+  "h5py",
+  "pyvista"
+]
+
+cuda =[
+  "jax[cuda12]"
 ]
 
 dev = ["anybadge",
@@ -63,15 +62,23 @@ dev = ["anybadge",
        "pytest-mypy",
        "hatchling",
        "nox",
-       "pre-commit",
-       "memray"]
+       "pre-commit"]
 
 docs = [
   "sphinx>=7.0",
   "myst_parser>=0.13",
   "sphinx_copybutton",
   "sphinx_autodoc_typehints",
-  "furo>=2023.08.17",
+  "furo>=2023.08.17"
+]
+
+[tool.hatch]
+version.source = "vcs"
+build.hooks.vcs.version-file = "varprodmdstatspy/_version.py"
+build.include = [
+  "varprodmdstatspy",
+  "experiments",
+  "visualization"
 ]
 
 [tool.coverage]
@@ -154,6 +161,10 @@ messages_control.disable = [
 ]
 
 [project.scripts]
+pdebench_dl = "experiments.util.pdebench_data_download:pdebench_downdload"
+velocity2vorticity = "experiments.util.convert2vorticity:convert_velocity"
 run_ssim = "experiments.varprodmd_ssim_performance:run_ssim"
 run_mrse = "experiments.varprodmd_mrse_performance:run_mrse"
+run_3dcfd = "experiments.varprodmd_3dcfd:run_3dcfd"
 visualize_stats = "visualization.visualize_results:visualize_stats"
+visualize_3dcfd_results = "visualization.visualize_3dcfd_results:visualize_results"

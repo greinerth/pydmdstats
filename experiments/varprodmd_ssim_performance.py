@@ -24,7 +24,8 @@ from varprodmdstatspy.util.experiment_utils import (
 )
 
 logging.basicConfig(level=logging.INFO, filename=__name__)
-# logging.root.setLevel(logging.INFO)
+logging.root.setLevel(logging.INFO)
+
 OPT_ARGS = {"method": "trf", "tr_solver": "exact", "loss": "linear"}
 
 
@@ -203,7 +204,7 @@ def run_ssim():
         dest="loss",
         default="linear",
         type=str,
-        help='Loss for optimization. Only useful if opt is not set to"lm" [Default: linear]',
+        help='Loss for optimization. Only useful if opt is not set to "lm" [Default: linear]',
     )
     parser.add_argument(
         "--opt",

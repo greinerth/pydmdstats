@@ -13,10 +13,11 @@
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
+
   "runArgs": ["--gpus", "all"],
   // Use 'postCreateCommand' to run commands after the container is created.
 
-  "postCreateCommand": "pip3 install --user -e .[dev,test] && sudo apt update && sudo apt upgrade -y && sudo apt install texlive-xetex cm-super dvipng -y",
+  "postCreateCommand": "pip3 install --user -e .[dev,test,experiments,cuda] && sudo apt update -y && sudo apt upgrade -y && sudo apt install texlive-xetex cm-super dvipng mesa-utils libgl1-mesa-glx -y && pre-commit install .",
 
   "customizations": {
     "vscode": {

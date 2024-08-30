@@ -89,7 +89,7 @@ After the experiments were run you can easily visualize the runtime statistics.\
 Here is an example of how to visualize the sea surface temperature experiment
 
 ```
-visualize_stats -p output/lm/MRSE_highdim_100_linear.pkl
+visualize_stats -p experiments/output/lm/MRSE_highdim_100_linear.pkl
 ```
 
 ## Library Selection Scheme
@@ -188,3 +188,94 @@ f\left(x, y\right) = \Psi_1\left(x, y\right) + \Psi_2\left(x, y\right), \Psi_i =
 |                                                                                   ![moving_points_stats](./figures/moving_points_stats.png)                                                                                   |
 | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | _Moving Points: Expected runtime for BOPDMD and VarProDMD. Compression accelerates the optimization. BOPDMD however yields superior performance. VarProDMD uses LM optimization with Jacobian scaling during the experiment._ |
+
+### 3D Vorticity
+
+The 3D Vorticity experiment relies on a dataset provided by
+[PDEBench](https://github.com/pdebench/PDEBench). Within this experiment we
+investigate the extrapolation capability on a very high-dimensional problem.
+Each trial of the dataset (100 recordings in total) consists of a trajectory of
+dimension of $21 \times 128 \times 128 \times 128 \times 3$. Inspect
+`visualization/visualize_3dcfd_volume.py` for replicating the following figure.
+You might need to run the script on your host OS.
+[PyVista](https://github.com/pyvista) is used for rendering the vorticity
+fields; it requires additional drivers, which are currently not supported within
+the devcontainer.
+
+|    ![3dcfd_vorticity](./figures/3dcfd_vorticity_example_2.png)    |
+| :---------------------------------------------------------------: |
+| _3D Vorticity experiment: 3D Vorticity field evolving over time._ |
+
+#### Prerequisites
+
+Ensure that jax with cuda is installed. Either install manually
+`pip install -jax[cuda12]` or just install the the package with optional
+dependency `pip install --user -e .[cuda]`
+
+Download the datasets execute`pdebench_dl --pde_name 3d_cfd` This will download
+different and store large datasets (>200GB) in the `experiments` folder. Please
+ensure you have enough space on your machine.\
+After the download you should see additional folder structure `experiments/data/3D/Train`.
+
+#### Conversion to vorticity
+
+Now the data needs to be converted from velocity $\boldsymbol{v}$ to vorticity
+$\boldsymbol{\omega}: v \rightarrow \boldsymbol{\omega}$.
+
+```math
+\boldsymbol{\omega} = \nabla \times \boldsymbol{v} = \begin{bmatrix}
+    \frac{\partial}{\partial x} \\
+    \frac{\partial}{\partial y} \\
+    \frac{\partial}{\partial z}
+\end{bmatrix}
+\times
+\begin{bmatrix}
+    v_x\\
+    v_y\\
+    v_z
+\end{bmatrix} =
+\begin{bmatrix}
+    \frac{\partial v_z}{\partial y} - \frac{\partial v_y}{\partial z} \\
+    \frac{\partial v_x}{\partial z} - \frac{\partial v_z}{\partial x} \\
+    \frac{\partial v_y}{\partial x} - \frac{\partial v_x}{\partial y}
+\end{bmatrix},
+```
+
+For approximating the vorticity, we rely on spectral derivatives. In this case,
+we utilize the Fourier Transform $\mathcal{F}\{\cdot\}$ and corresponding
+inverse Transform $\mathcal{F}^{-1}\{\cdot\}$ on spatial ($x,y,z$-) directions.
+Considering the $x$-direction as example, we harness the property
+
+```math
+\mathcal{F}_x\left\{\frac{\partial v_z}{ \partial x}\right\} = j\kappa_x\mathcal{F}_x\{v_z\} \Rightarrow \frac{\partial v_z}{\partial x} = \mathcal{F}^{-1}_x\{j\kappa_x\mathcal{F}_x\{v_z\}\},
+```
+
+where $\kappa_x$ denotes the spatial wave number in the x-direction.
+
+To perform conversion, execute
+
+```
+velocity2vorticity -d experiments/3D/Train/3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5
+```
+
+Now an additional file
+`3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train_vorticity.hdf5`\
+should appear.
+
+#### Run the experiment
+
+To replicate the experiment run
+
+```
+run_3dcfd -d experiments/3D/Train/3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5 -s 0.5
+```
+
+To visualize the result run
+
+```
+visualize_3dcfd_results experiments/output/trf/experiments/output/trf/3D_CFD_Turb_M1.0_Eta1e-08_Zeta1e-08_periodic_Train_vorticity/nRMSE_100_runs_0.5_split_0.0_comp.pkl
+```
+
+|                                                                   ![3dcfd_vorticity](./figures/3dcfd_rand_vorticity_jacscale_0.5_split.png)                                                                   |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| _3D Vorticity experiment: (Left): Interpolation (grey area) and extrapolation over time $t\:[s]$. The lines denote the expected nRMSE, the envelopes are the 95% confidence interval. (Right): Runtimes [s]._ |

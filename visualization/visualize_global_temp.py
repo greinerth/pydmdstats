@@ -7,10 +7,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import numpy as np
-from pydmd import BOPDMD, VarProDMD
 
 # from util.experiment_utils import OPT_ARGS
-from .varprodmd_ssim_performance import download
+from experiments.varprodmd_ssim_performance import download
+from pydmd import BOPDMD, VarProDMD
 
 generator = np.random.Generator(np.random.PCG64())
 
