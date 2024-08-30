@@ -89,7 +89,7 @@ After the experiments were run you can easily visualize the runtime statistics.\
 Here is an example of how to visualize the sea surface temperature experiment
 
 ```
-visualize_stats -p output/lm/MRSE_highdim_100_linear.pkl
+visualize_stats -p experiments/output/lm/MRSE_highdim_100_linear.pkl
 ```
 
 ## Library Selection Scheme
@@ -268,6 +268,12 @@ To replicate the experiment run
 
 ```
 run_3dcfd -d experiments/3D/Train/3D_CFD_Rand_M1.0_Eta1e-08_Zeta1e-08_periodic_Train.hdf5 -s 0.5
+```
+
+To visualize the result run
+
+```
+visualize_3dcfd_results experiments/output/trf/experiments/output/trf/3D_CFD_Turb_M1.0_Eta1e-08_Zeta1e-08_periodic_Train_vorticity/nRMSE_100_runs_0.5_split_0.0_comp.pkl
 ```
 
 |                                                                   ![3dcfd_vorticity](./figures/3dcfd_rand_vorticity_jacscale_0.5_split.png)                                                                   |
